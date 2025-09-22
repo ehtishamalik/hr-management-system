@@ -8,7 +8,7 @@ import { withAuth } from "@/lib/withAuth";
 
 import type { CustomResponse } from "@/types";
 
-// GET /api/policies or /api/policies?id=uuid
+// GET /api/policy or /api/policy?id=uuid
 export const GET = withAuth(async (request: NextRequest) => {
   const id = getValueFromRequest(request, "id");
 
@@ -37,7 +37,7 @@ export const GET = withAuth(async (request: NextRequest) => {
   }
 });
 
-// POST /api/policies
+// POST /api/policy
 export const POST = withAuth(async (request: NextRequest) => {
   try {
     const body = await request.json();
@@ -54,7 +54,7 @@ export const POST = withAuth(async (request: NextRequest) => {
   }
 });
 
-// PUT /api/policies?id=uuid
+// PUT /api/policy?id=uuid
 export const PUT = withAuth(async (request: NextRequest) => {
   const id = getValueFromRequest(request, "id");
 
@@ -82,7 +82,7 @@ export const PUT = withAuth(async (request: NextRequest) => {
   }
 });
 
-// DELETE /api/policies?id=uuid
+// DELETE /api/policy?id=uuid
 export const DELETE = withAuth(async (request: NextRequest) => {
   const id = getValueFromRequest(request, "id");
 

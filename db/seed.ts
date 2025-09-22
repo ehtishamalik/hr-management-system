@@ -15,12 +15,16 @@ import {
   UserDetailTable,
   UserTable,
 } from "./schema";
+import { EMAIL_POSTFIX } from "@/constants";
+import { auth } from "@/lib/auth";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
 });
 
 export const db = drizzle({ client: pool });
+
+const seedAdminEmail = "johndoe" + EMAIL_POSTFIX;
 
 const usersData: {
   user: UserTableInsertType;
@@ -29,8 +33,8 @@ const usersData: {
   {
     user: {
       id: "",
-      name: "Munawar Saeed",
-      email: "munawar@lycusinc.com",
+      name: "John Doe",
+      email: seedAdminEmail,
     },
     detail: {
       userId: "",
@@ -41,13 +45,73 @@ const usersData: {
   {
     user: {
       id: "",
-      name: "Shoaib Amjad",
-      email: "shoaibamjad@lycusinc.com",
+      name: "Richard Roe",
+      email: "richard" + EMAIL_POSTFIX,
     },
     detail: {
       userId: "",
       employeeId: "2",
-      role: ROLE.ADMIN,
+      role: ROLE.MANAGER,
+    },
+  },
+  {
+    user: {
+      id: "",
+      name: "Jane Smith",
+      email: "jane" + EMAIL_POSTFIX,
+    },
+    detail: {
+      userId: "",
+      employeeId: "3",
+      role: ROLE.MANAGER,
+    },
+  },
+  {
+    user: {
+      id: "",
+      name: "Alex Johnson",
+      email: "alex" + EMAIL_POSTFIX,
+    },
+    detail: {
+      userId: "",
+      employeeId: "4",
+      role: ROLE.USER,
+    },
+  },
+  {
+    user: {
+      id: "",
+      name: "Chris Taylor",
+      email: "chris" + EMAIL_POSTFIX,
+    },
+    detail: {
+      userId: "",
+      employeeId: "5",
+      role: ROLE.USER,
+    },
+  },
+  {
+    user: {
+      id: "",
+      name: "Sam Lee",
+      email: "sam" + EMAIL_POSTFIX,
+    },
+    detail: {
+      userId: "",
+      employeeId: "6",
+      role: ROLE.USER,
+    },
+  },
+  {
+    user: {
+      id: "",
+      name: "Jordan Brown",
+      email: "jordan" + EMAIL_POSTFIX,
+    },
+    detail: {
+      userId: "",
+      employeeId: "7",
+      role: ROLE.USER,
     },
   },
 ];
@@ -104,7 +168,7 @@ const main = async () => {
   const [user] = await db
     .select()
     .from(UserTable)
-    .where(eq(UserTable.email, "munawar@lycusinc.com"));
+    .where(eq(UserTable.email, seedAdminEmail));
 
   if (user) {
     console.log("Data already exists. Seeding aborted.");
@@ -112,23 +176,25 @@ const main = async () => {
   }
 
   for (const user of usersData) {
-    const [newUser] = await db
-      .insert(UserTable)
-      .values({
-        ...user.user,
-        id: nanoid(),
-      })
-      .returning();
+    const { user: userResult } = await auth.api.signUpEmail({
+      body: {
+        name: user.user.name,
+        email: user.user.email,
+        password: "password1234",
+      },
+    });
 
     await db.insert(UserDetailTable).values({
       ...user.detail,
-      userId: newUser.id,
+      userId: userResult.id,
     });
+
+    console.log(
+      `Created user: ${user.user.name} with role ${user.detail.role}`
+    );
   }
 
-  for (const leave of leavesData) {
-    await db.insert(LeaveTypeTable).values(leave);
-  }
+  await db.insert(LeaveTypeTable).values(leavesData);
 
   const currentYear = new Date().getFullYear();
   await db.insert(LeaveYearTable).values({

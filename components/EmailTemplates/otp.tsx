@@ -32,7 +32,7 @@ export const OTPEmailTemplate = ({ otp }: EmailTemplateProps) => (
             This code is valid for the next 5 minutes. If you did not request
             this, please ignore this email.
           </Text>
-          <Text style={footer}>— Lycus Sync</Text>
+          <Text style={footer}>— HR Management System</Text>
         </Section>
       </Container>
     </Body>

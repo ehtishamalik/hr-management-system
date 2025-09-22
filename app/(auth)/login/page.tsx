@@ -17,7 +17,7 @@ const Login = async () => {
   return (
     <main className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="w-full max-w-sm text-center">
-        <h1 className="text-2xl font-bold">Welcome to Lycus Inc.</h1>
+        <h1 className="text-2xl font-bold">Welcome to HR Management System.</h1>
         <LoginForm />
       </div>
     </main>

@@ -45,7 +45,7 @@ export const LeaveRequestEmail = ({ leave, user }: LeaveRequestEmailProps) => (
           </Text>
           <Text style={footer}>
             Please review and take action as required.
-            <br />— Lycus Sync
+            <br />— HR Management System
           </Text>
         </Section>
       </Container>

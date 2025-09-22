@@ -20,7 +20,7 @@ interface EmailTemplateProps {
 export const MagicLinkEmailTemplate = ({ url }: EmailTemplateProps) => (
   <Html>
     <Head />
-    <Preview>Click the link to login to Lycus HRM!</Preview>
+    <Preview>Click the link to login to HRM!</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section>
@@ -48,7 +48,7 @@ export const MagicLinkEmailTemplate = ({ url }: EmailTemplateProps) => (
             This link is valid for the next 5 minutes. If you did not request
             this, please ignore this email.
           </Text>
-          <Text style={footer}>— Lycus Sync</Text>
+          <Text style={footer}>— HR Management System</Text>
         </Section>
       </Container>
     </Body>

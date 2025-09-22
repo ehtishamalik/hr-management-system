@@ -9,7 +9,7 @@ import { isRichTextEmpty } from "./helpers";
 import { UNKNOWN_ERROR } from "@/constants";
 import { PolicyFormSchema } from "./schema";
 import { STATUS } from "@/enum";
-import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 import type { PolicyFormProps, PolicyFormSchemaType } from "./types";
 import type { PolicyTableInsertType } from "@/db/types";
@@ -18,7 +18,7 @@ export const usePolicyForm = ({ policy }: PolicyFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(Boolean(policy));
 
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   const form = useForm<PolicyFormSchemaType>({
     resolver: zodResolver(PolicyFormSchema),
@@ -76,7 +76,7 @@ export const usePolicyForm = ({ policy }: PolicyFormProps) => {
       setIsLoading(true);
 
       const isUpdate = !!policy?.id;
-      const url = isUpdate ? `/api/policies?id=${policy.id}` : "/api/policies";
+      const url = isUpdate ? `/api/policy?id=${policy.id}` : "/api/policy";
 
       try {
         const response = await fetch(url, {

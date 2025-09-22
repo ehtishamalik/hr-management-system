@@ -1,6 +1,6 @@
 {
-  "name": "Lycus HRM System",
-  "short_name": "lycusync",
+  "name": "HRM System",
+  "short_name": "hrm-system",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

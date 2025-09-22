@@ -1,6 +1,6 @@
-# Lycus Sync - HR Management System
+# HRM System
 
-Lycus Sync is a comprehensive Human Resources Management System built for Lycus Inc. The application helps manage employee leave requests, policies, team oversight, and administrative functions.
+A comprehensive Human Resources Management System that helps manage employee leave requests, policies, team oversight, and administrative functions.
 
 ## Features
 
@@ -141,12 +141,27 @@ The application uses several key tables:
 - `yarn studio` - Start Drizzle Studio for database inspection
 - `yarn seed` - Seed the database with initial data
 
-## Default Admin Account
+## Default Accounts
 
-After seeding, you can login with:
+#### You can login with any of the following demo accounts:
 
-- Email: munawar@lycusinc.com
-- Authentication: Via magic link sent to email
+Default password is: password1234
+
+### Admin User
+
+- Email: johndoe@ehtishamalik.com
+
+### Manager User
+
+- Email: richard@ehtishamalik.com
+- Email: jane@ehtishamalik.com
+
+### Regular User
+
+- Email: alex@ehtishamalik.com
+- Email: chris@ehtishamalik.com
+- Email: sam@ehtishamalik.com
+- Email: jordan@ehtishamalik.com
 
 ## License
 

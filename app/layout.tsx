@@ -13,8 +13,8 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Lycus Sync | HRM",
-  description: "Lycus Inc. Human Resources Management System",
+  title: "HRM",
+  description: "A Human Resources Management System",
 };
 
 export default function RootLayout({

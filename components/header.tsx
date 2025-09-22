@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 
-import { signOut } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
@@ -51,7 +51,7 @@ export const Header = ({ session }: { session: SessionType }) => {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
-                  await signOut({
+                  await authClient.signOut({
                     fetchOptions: {
                       onSuccess: () => {
                         router.push("/login");

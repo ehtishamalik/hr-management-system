@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { LEAVE_STATUS } from "@/enum";
 import { formatDate } from "@/lib/utils";
 import { UNKNOWN_ERROR } from "@/constants";
-import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 import type { LeaveFormHookProps, LeaveFormSchemaType } from "./types";
 import type { LeaveTableInsertType } from "@/db/types";
@@ -20,7 +20,7 @@ export const useLeaveForm = ({ userId }: LeaveFormHookProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   const form = useForm<LeaveFormSchemaType>({
     resolver: zodResolver(LEAVE_FORM_SCHEMA),

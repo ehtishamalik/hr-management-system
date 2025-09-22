@@ -20,9 +20,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { EMAIL_POSTFIX, UNKNOWN_ERROR } from "@/constants";
-import { signIn } from "@/lib/auth-client";
-
-import { UserType } from "@/types";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z
@@ -31,15 +30,21 @@ const formSchema = z.object({
     .refine((val) => !val.includes("@"), {
       message: "Please enter only the email username without '@'.",
     }),
+  password: z
+    .string()
+    .min(8, { message: "Password is required." })
+    .max(128, { message: "Password must be at most 128 characters." }),
 });
 
 export const LoginForm = () => {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email: "johndoe",
+      password: "password1234",
     },
   });
 
@@ -48,41 +53,17 @@ export const LoginForm = () => {
     const fullEmail = `${values.email}${EMAIL_POSTFIX}`;
 
     try {
-      const response = await fetch(`/api/user?email=${fullEmail}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok || !responseData.success) {
-        toast.error("Error", {
-          description:
-            responseData.error ||
-            "Failed to fetch user data. Please wait and try again.",
-        });
-        return;
-      }
-
-      const user: UserType = responseData.data;
-
-      const { error } = await signIn.magicLink({
-        email: user.user.email,
-        name: user.user.name,
-        callbackURL: "/",
-        errorCallbackURL: "/login",
+      const { error } = await authClient.signIn.email({
+        email: fullEmail,
+        password: values.password,
       });
 
       if (error) {
-        toast.error("Failed to send the Magic Link email.", {
-          description: error.message || error.statusText,
+        toast.error("Login Failed", {
+          description: error.message,
         });
       } else {
-        toast.success("Magic Link sent successfully!", {
-          description: "Please check your email for the Magic Link.",
-        });
+        router.push("/");
       }
     } catch (error) {
       toast.error("Unexpected Error", {
@@ -106,7 +87,7 @@ export const LoginForm = () => {
               <FormControl>
                 <div className="relative">
                   <Input
-                    placeholder="Enter you email"
+                    placeholder="Enter your email"
                     className="pe-28"
                     {...field}
                   />
@@ -115,8 +96,27 @@ export const LoginForm = () => {
                   </span>
                 </div>
               </FormControl>
+              <FormMessage className="text-left" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter your password"
+                  className="pe-28"
+                  type="password"
+                  {...field}
+                />
+              </FormControl>
               <FormDescription className="text-left">
-                You will recieve an email with Magic Link.
+                Just click submit, for demo we have already added email and
+                password of admin account in fields.
               </FormDescription>
               <FormMessage className="text-left" />
             </FormItem>
@@ -124,8 +124,7 @@ export const LoginForm = () => {
         />
 
         <Button className="w-full" type="submit">
-          Send Magic Link{" "}
-          {isLoading ? <LoaderCircle className="animate-spin" /> : "🪄"}
+          Submit {isLoading && <LoaderCircle className="animate-spin" />}
         </Button>
       </form>
     </Form>

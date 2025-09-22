@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { UNKNOWN_ERROR } from "@/constants";
 import { STATUS } from "@/enum";
-import { signOut, useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 interface DeactivateUserFormProps {
   id: string;
@@ -29,7 +29,7 @@ export const DeactivateUserForm = ({ id }: DeactivateUserFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   const handleDelete = async () => {
     const submitValue = {
@@ -56,7 +56,7 @@ export const DeactivateUserForm = ({ id }: DeactivateUserFormProps) => {
           description: "The user has been deactivated successfully.",
         });
         if (id === session?.user.id) {
-          await signOut();
+          await authClient.signOut();
         } else {
           router.push("/admin/users");
         }
