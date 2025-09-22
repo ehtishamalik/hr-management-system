@@ -2,6 +2,9 @@
 
 A comprehensive Human Resources Management System that helps manage employee leave requests, policies, team oversight, and administrative functions.
 
+<img width="1345" height="679" alt="image" src="https://github.com/user-attachments/assets/09918f08-d809-4983-b461-19a9946352db" />
+
+
 ## Features
 
 ### User Management
