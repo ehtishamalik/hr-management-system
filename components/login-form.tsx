@@ -18,7 +18,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { LoaderCircle } from "lucide-react";
+import { Eye, EyeClosed, LoaderCircle } from "lucide-react";
 import { EMAIL_POSTFIX, UNKNOWN_ERROR } from "@/constants";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -38,6 +38,7 @@ const formSchema = z.object({
 
 export const LoginForm = () => {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -106,14 +107,25 @@ export const LoginForm = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your password"
-                  className="pe-28"
-                  type="password"
-                  {...field}
-                />
-              </FormControl>
+              <div className="flex">
+                <FormControl>
+                  <Input
+                    placeholder="Enter your password"
+                    className="rounded-r-none"
+                    type={showPassword ? "text" : "password"}
+                    {...field}
+                  />
+                </FormControl>
+                <Button
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                  className="rounded-l-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeClosed /> : <Eye />}
+                </Button>
+              </div>
               <FormDescription className="text-left">
                 Just click submit, for demo we have already added email and
                 password of admin account in fields.
