@@ -1,6 +1,5 @@
 import Link from "next/link";
-import logo from "@/public/logo.png";
-import logoWhite from "@/public/logo_white.png";
+import logo from "@/public/android-chrome-192x192.png";
 import Image from "next/image";
 
 import {
@@ -106,15 +105,9 @@ export const AppSidebar = ({ session }: { session: SessionType }) => {
         <Image
           src={logo}
           alt="company logo"
-          className="dark:hidden"
-          width={192}
-          priority
-        />
-        <Image
-          src={logoWhite}
-          alt="company logo"
-          className="hidden dark:block"
-          width={192}
+          height={96}
+          width={96}
+          className="w-24 h-24 mx-auto object-cover"
           priority
         />
       </SidebarHeader>

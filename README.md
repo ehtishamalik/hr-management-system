@@ -2,6 +2,12 @@
 
 A comprehensive Human Resources Management System that helps manage employee leave requests, policies, team oversight, and administrative functions.
 
+> ⚡ This application was originally created for [**Lycus Inc.**](https://www.lycusinc.com) to streamline and digitize their human resource management processes.  
+> Designed with scalability in mind, it can be adapted for startups, enterprises, and organizations of any size, offering HR teams a seamless way to manage employees, track attendance, handle leaves, and oversee performance. Its intuitive interface ensures both administrators and staff have an efficient, user-friendly experience.
+
+<img width="1345" height="679" alt="image" src="https://github.com/user-attachments/assets/09918f08-d809-4983-b461-19a9946352db" />
+
+
 ## Features
 
 ### User Management
@@ -164,5 +170,7 @@ Default password is: password1234
 - Email: jordan@ehtishamalik.com
 
 ## License
+
+Copyright (c) 2025 ehtishamalik
 
 This project is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
