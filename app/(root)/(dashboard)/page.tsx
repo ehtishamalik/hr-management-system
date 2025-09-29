@@ -57,7 +57,7 @@ const Home = async () => {
         <div className="border rounded-xl overflow-hidden">
           <Table>
             {approvedLeaves.length === 0 ? (
-              <TableCaption>No applied leave. Grapes !!! 🍇</TableCaption>
+              <TableCaption>No applied leave.</TableCaption>
             ) : null}
 
             <TableHeader>
@@ -118,9 +118,7 @@ const Home = async () => {
         <div className="border rounded-xl overflow-hidden">
           <Table>
             {pendingLeaves.length === 0 ? (
-              <TableCaption>
-                No leave requested. Another Grape !!! 🍇
-              </TableCaption>
+              <TableCaption>No leave requested.</TableCaption>
             ) : null}
 
             <TableHeader>

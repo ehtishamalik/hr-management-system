@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
 import { authClient } from "@/lib/auth-client";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { SetTheme } from "./set-theme";
 import { useRouter } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ import type { SessionType } from "@/types";
 
 export const Header = ({ session }: { session: SessionType }) => {
   const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   return (
     <header className="bg-sidebar">
@@ -51,16 +53,21 @@ export const Header = ({ session }: { session: SessionType }) => {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
+                  setLoggingOut(true);
                   await authClient.signOut({
                     fetchOptions: {
                       onSuccess: () => {
+                        setLoggingOut(false);
                         router.push("/login");
                       },
                     },
                   });
                 }}
               >
-                Logout
+                Logout{" "}
+                {loggingOut && (
+                  <LoaderCircle className="inline-block animate-spin" />
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

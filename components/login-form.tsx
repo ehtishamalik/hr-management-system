@@ -64,6 +64,10 @@ export const LoginForm = () => {
           description: error.message,
         });
       } else {
+        toast.success("Login Successful", {
+          description:
+            "You have been logged in successfully. Please wait while we redirect you.",
+        });
         router.push("/");
       }
     } catch (error) {

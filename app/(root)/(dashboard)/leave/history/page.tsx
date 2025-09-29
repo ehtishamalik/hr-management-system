@@ -43,7 +43,7 @@ const LeaveHistory = async () => {
         <div className="border rounded-xl">
           <Table className="overflow-auto max-h-96">
             {leaves.length === 0 ? (
-              <TableCaption>No leave taken yet. Grapes !!! 🍇</TableCaption>
+              <TableCaption>No leave taken yet.</TableCaption>
             ) : null}
 
             <TableHeader>
