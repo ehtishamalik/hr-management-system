@@ -8,7 +8,6 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { SetTheme } from "./set-theme";
-import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 
 import {
@@ -23,7 +22,6 @@ import {
 import type { SessionType } from "@/types";
 
 export const Header = ({ session }: { session: SessionType }) => {
-  const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
 
   return (
@@ -58,7 +56,7 @@ export const Header = ({ session }: { session: SessionType }) => {
                     fetchOptions: {
                       onSuccess: () => {
                         setLoggingOut(false);
-                        router.push("/login");
+                        window.location.reload();
                       },
                     },
                   });

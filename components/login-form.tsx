@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { Eye, EyeClosed, LoaderCircle } from "lucide-react";
 import { EMAIL_POSTFIX, UNKNOWN_ERROR } from "@/constants";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z
@@ -37,7 +36,6 @@ const formSchema = z.object({
 });
 
 export const LoginForm = () => {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -68,7 +66,7 @@ export const LoginForm = () => {
           description:
             "You have been logged in successfully. Please wait while we redirect you.",
         });
-        router.push("/");
+        window.location.reload();
       }
     } catch (error) {
       toast.error("Unexpected Error", {
