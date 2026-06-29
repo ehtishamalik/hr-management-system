@@ -1,185 +1,111 @@
 "use client";
 
-import React, { useState } from "react";
+import { Check, X, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { LEAVE_STATUS, ROLE } from "@/enum";
-import { Textarea } from "./ui/textarea";
-import { UNKNOWN_ERROR } from "@/constants";
-
+import { handleServerResponse, withErrorHandling } from "@/lib/error-handling";
+import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-
-import type {
-  LeaveRemarkTableInsertType,
-  LeaveTableSelectType,
-} from "@/db/types";
-import type { SessionType } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface ProcessLeaveFormProps {
-  session: SessionType;
-  leave: LeaveTableSelectType;
+  leaveId: string;
+  isFullView?: boolean;
 }
 
-export const ProcessLeaveForm = ({ leave, session }: ProcessLeaveFormProps) => {
+export const ProcessLeaveForm = ({
+  leaveId,
+  isFullView = false,
+}: ProcessLeaveFormProps) => {
   const router = useRouter();
 
-  const [isLoadingApprove, setIsLoadingApprove] = useState<boolean>(false);
-  const [isLoadingReject, setIsLoadingReject] = useState<boolean>(false);
-
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [remarks, setRemarks] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isLoadingReject, setIsLoadingReject] = useState<boolean>(false);
+  const [isLoadingApprove, setIsLoadingApprove] = useState<boolean>(false);
 
   const handleSubmitApprove = async () => {
-    const leaveStatus =
-      session.user.role === ROLE.ADMIN
-        ? LEAVE_STATUS.APPROVED
-        : LEAVE_STATUS.ACCEPTED;
-
     setIsLoadingApprove(true);
-
-    await handleAddRemark(
-      `Leave has been ${leaveStatus} by ${session.user.name}.`
-    );
-
-    const submitValue = {
-      leaveStatus: leaveStatus,
-    };
-
-    try {
-      const response = await fetch(`/api/leave?id=${leave.id}`, {
+    await withErrorHandling(async () => {
+      const response = await fetch(`/api/leave/approve?id=${leaveId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(submitValue),
       });
 
-      const { success, error } = await response.json();
-
-      setIsLoadingApprove(false);
-
-      if (response.ok && success) {
+      handleServerResponse(response, () => {
         toast.success(`Leave Approved.`, {
           description: `The leave has been approved successfully.`,
         });
         router.refresh();
-      } else {
-        toast.error("Could not approve leave.", {
-          description: error || UNKNOWN_ERROR,
-        });
-      }
-    } catch {
-      toast.error("Failed to approve remarks", {
-        description: UNKNOWN_ERROR,
       });
-    }
-  };
-
-  const handleAddRemark = async (remark: string) => {
-    const submitValue: LeaveRemarkTableInsertType = {
-      leaveId: leave.id,
-      userId: session.user.id!,
-      remark: remark,
-    };
-
-    try {
-      const response = await fetch(`/api/leave/remark`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitValue),
-      });
-
-      const { success, error } = await response.json();
-
-      if (!response.ok || !success) {
-        toast.error("Could not add remark.", {
-          description: error || UNKNOWN_ERROR,
-        });
-      }
-    } catch {
-      toast.error("Failed to add remarks", {
-        description: UNKNOWN_ERROR,
-      });
-    } finally {
-      setRemarks("");
-    }
+    }, "Could not approve leave.");
+    setIsLoadingApprove(false);
   };
 
   const handleSubmitReject = async () => {
     setDialogOpen(false);
     setIsLoadingReject(true);
 
-    const remark = remarks.trim()
-      ? `${remarks.trim()} - (Leave has been ${LEAVE_STATUS.REJECTED} by ${session.user?.name}.)`
-      : `Leave has been ${LEAVE_STATUS.REJECTED} by ${session.user?.name}.`;
-
-    await handleAddRemark(remark);
-
-    const submitValue = {
-      leaveStatus: LEAVE_STATUS.REJECTED,
-      processedBy: session.user?.id || "",
-    };
-
-    try {
-      const response = await fetch(`/api/leave?id=${leave.id}`, {
+    await withErrorHandling(async () => {
+      const response = await fetch(`/api/leave/reject?id=${leaveId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(submitValue),
+        body: JSON.stringify({
+          remark: remarks.trim(),
+        }),
       });
 
-      const { success, error } = await response.json();
-
-      setIsLoadingReject(false);
-
-      if (response.ok && success) {
+      handleServerResponse(response, () => {
         toast.success(`Leave Rejected`, {
           description: `The leave has been rejected successfully.`,
         });
         router.refresh();
-      } else {
-        toast.error("Could not reject leave.", {
-          description: error || UNKNOWN_ERROR,
-        });
-      }
-    } catch {
-      toast.error("Failed to reject remarks", {
-        description: UNKNOWN_ERROR,
       });
-    }
+    }, "Could not reject leave.");
+    setIsLoadingReject(false);
   };
 
   return (
-    <footer className="relative z-auto flex gap-4 items-center w-full">
+    <footer
+      className={cn("flex gap-4 items-center w-full", {
+        "gap-2": isFullView,
+      })}
+    >
       {/* Reject Button with Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
           <Button
             variant="destructive"
             className="flex-1"
+            size={isFullView ? "sm" : "default"}
             disabled={isLoadingReject}
           >
+            {isLoadingReject ? <Spinner /> : <X />}
             Reject
-            {isLoadingReject && <LoaderCircle className="animate-spin" />}
           </Button>
         </DialogTrigger>
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Leave</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="size-5 text-destructive" />
+              Reject Leave
+            </DialogTitle>
             <DialogDescription>
               This action cannot be undone. This will permanently reject the
               employee&apos;s leave. Consider adding a remark to let them know
@@ -205,10 +131,12 @@ export const ProcessLeaveForm = ({ leave, session }: ProcessLeaveFormProps) => {
       <Button
         variant="approve"
         className="flex-1"
+        size={isFullView ? "sm" : "default"}
         onClick={handleSubmitApprove}
+        disabled={isLoadingApprove}
       >
+        {isLoadingApprove ? <Spinner /> : <Check />}
         Approve
-        {isLoadingApprove ? <LoaderCircle className="animate-spin" /> : null}
       </Button>
     </footer>
   );

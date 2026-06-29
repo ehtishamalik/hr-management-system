@@ -1,25 +1,21 @@
-import React from "react";
+import Headline from "@/components/headline";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Loading = () => {
   return (
-    <section>
-      <section className="mb-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-medium">Policy Management</h1>
-          <Skeleton className="h-8 w-28" />
-        </div>
+    <>
+      <section className="flex justify-between flex-col md:flex-row md:items-center gap-8">
+        <Headline>Policy Management</Headline>
+        <Skeleton className="h-8 w-full md:w-32" />
       </section>
 
-      <section className="mb-8">
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
-          <Skeleton className="h-52 w-full" />
-          <Skeleton className="h-52 w-full" />
-          <Skeleton className="h-52 w-full" />
-        </div>
+      <section className="grid-flexible">
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
       </section>
-    </section>
+    </>
   );
 };
 

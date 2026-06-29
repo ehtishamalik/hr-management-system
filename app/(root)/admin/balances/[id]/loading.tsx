@@ -1,28 +1,19 @@
-import React from "react";
-
+import { LeaveCardsSkeleton } from "@/components/leave-cards";
 import { LoadingTableUI } from "@/components/loading-ui";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Loading = () => {
   return (
-    <section>
-      <section className="flex justify-between items-center mb-8">
-        <Skeleton className="h-8 w-96" />
-        <Skeleton className="h-8 w-28" />
+    <>
+      <section className="flex flex-col md:flex-row gap-4 justify-between">
+        <Skeleton className="h-8 w-full md:w-96" />
+        <Skeleton className="h-8 w-full md:w-28" />
       </section>
 
-      <section className="mb-8">
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-      </section>
+      <LeaveCardsSkeleton />
 
       <LoadingTableUI columns={8} />
-    </section>
+    </>
   );
 };
 

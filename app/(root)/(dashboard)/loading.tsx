@@ -1,27 +1,25 @@
-import React from "react";
+import Headline from "@/components/headline";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingTableUI } from "@/components/loading-ui";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Loading = () => {
   return (
-    <section>
-      <section>
-        <section className="mb-8">
-          <Skeleton className="h-8 w-24" />
-        </section>
+    <>
+      <Headline>
+        <Skeleton className="h-8 w-32" />
+      </Headline>
 
-        <LoadingTableUI columns={7} />
+      <section className="space-y-2">
+        <Headline type="h3">Applied Leaves</Headline>
+        <LoadingTableUI columns={6} rows={2} />
       </section>
 
-      <section>
-        <section className="mb-8">
-          <Skeleton className="h-8 w-24" />
-        </section>
-
-        <LoadingTableUI columns={7} />
+      <section className="space-y-2">
+        <Headline type="h3">Recent Leaves</Headline>
+        <LoadingTableUI columns={6} rows={2} />
       </section>
-    </section>
+    </>
   );
 };
 

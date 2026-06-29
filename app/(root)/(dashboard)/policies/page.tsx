@@ -1,41 +1,27 @@
-import React from "react";
+import Headline from "@/components/headline";
+import NotFoundBanner from "@/components/not-found-banner";
 import PolicyCard from "@/components/policy-card";
-import ToastError from "@/components/toast-error";
 
-import { cn } from "@/lib/utils";
-import { getPolicies } from "@/lib/helpers/policies";
+import { getPolicies } from "@/services/policy";
 
 const Policies = async () => {
   const policies = await getPolicies(true);
 
-  if (!policies) {
-    return <ToastError message="Error fetching policies." />;
-  }
-
   return (
     <>
-      <h1 className="text-2xl font-medium mb-8">Policies</h1>
+      <Headline>Company Policies</Headline>
 
-      <section className="mb-8">
-        <div
-          className={cn("grid gap-4", {
-            "grid-cols-3": policies.length <= 2,
-            "grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))]":
-              policies.length > 2,
-          })}
-        >
-          {policies.length > 0 ? (
-            policies.map((policy) => (
-              <PolicyCard
-                key={policy.policy.id}
-                policy={policy.policy}
-                user={policy.user}
-              />
-            ))
-          ) : (
-            <p>No policies found.</p>
-          )}
-        </div>
+      <section className="grid-flexible">
+        {policies.length > 0 ? (
+          policies.map(({ policy, user }) => (
+            <PolicyCard key={policy.id} policy={policy} user={user} />
+          ))
+        ) : (
+          <NotFoundBanner
+            headline="No Policies Found"
+            description="There are currently no policies available. Please check back later or contact your administrator if you believe this is an error."
+          />
+        )}
       </section>
     </>
   );

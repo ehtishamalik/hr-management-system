@@ -1,1 +1,1 @@
-export { default } from "./component";
+export { default } from "./leave-remarks-form";

@@ -1,122 +1,64 @@
 "use client";
 
-import React, { useState } from "react";
-import { toast } from "sonner";
-import { BanIcon, LoaderCircle } from "lucide-react";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
+import { BanIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { LEAVE_STATUS } from "@/enum";
-import { UNKNOWN_ERROR } from "@/constants";
-
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { handleServerResponse, withErrorHandling } from "@/lib/error-handling";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-
-import type { SessionType } from "@/types";
-import type { LeaveRemarkTableInsertType } from "@/db/types";
 
 interface SuspendLeaveFormProps {
   leaveId: string;
-  session: SessionType;
 }
 
-export const SuspendLeaveForm = ({
-  leaveId,
-  session,
-}: SuspendLeaveFormProps) => {
+export const SuspendLeaveForm = ({ leaveId }: SuspendLeaveFormProps) => {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [remark, setRemark] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddRemark = async () => {
-    const newRemark = remark.trim()
-      ? `${remark.trim()} - Leave has been suspended by ${session.user.name}.`
-      : `Leave has been ${LEAVE_STATUS.SUSPENDED}`;
-
-    const submitValue: LeaveRemarkTableInsertType = {
-      leaveId: leaveId,
-      userId: session.user.id!,
-      remark: newRemark,
-    };
-
-    try {
-      const response = await fetch(`/api/leave/remarks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitValue),
-      });
-
-      const { success, error } = await response.json();
-
-      if (!response.ok || !success) {
-        toast.error("Could not add remark.", {
-          description: error || UNKNOWN_ERROR,
-        });
-      }
-    } catch {
-      toast.error("Failed to add remarks", {
-        description: UNKNOWN_ERROR,
-      });
-    } finally {
-      setRemark("");
-    }
-  };
-
-  const handleSuspend = async () => {
+  const handleSubmit = async () => {
+    setDialogOpen(false);
     setIsLoading(true);
 
-    await handleAddRemark();
-
-    const submitValue = {
-      leaveStatus: LEAVE_STATUS.SUSPENDED,
-    };
-
-    try {
-      const response = await fetch(`/api/leave?id=${leaveId}`, {
+    await withErrorHandling(async () => {
+      const response = await fetch(`/api/leave/suspend?id=${leaveId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(submitValue),
+        body: JSON.stringify({
+          remark: remark.trim(),
+        }),
       });
 
-      const { success, error } = await response.json();
-
-      setIsLoading(false);
-
-      if (response.ok && success) {
-        toast.success(`Leave Suspended.`, {
+      handleServerResponse(response, () => {
+        toast.success(`Leave Suspended`, {
           description: `The leave has been suspended successfully.`,
         });
         router.refresh();
-      } else {
-        toast.error("Could not suspend leave.", {
-          description: error || UNKNOWN_ERROR,
-        });
-      }
-    } catch {
-      toast.error("Failed to suspend remarks", {
-        description: UNKNOWN_ERROR,
       });
-    }
+    }, "Could not suspend leave.");
+    setIsLoading(false);
   };
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="suspend">
+        <Button variant="suspend" size="sm" disabled={isLoading}>
           Suspend
-          <BanIcon />
+          {isLoading ? <Spinner /> : <BanIcon />}
         </Button>
       </DialogTrigger>
 
@@ -137,13 +79,12 @@ export const SuspendLeaveForm = ({
 
         <DialogFooter>
           <Button
-            onClick={handleSuspend}
+            onClick={handleSubmit}
             className="w-full"
             variant="suspend"
             disabled={isLoading}
           >
             Suspend
-            {isLoading && <LoaderCircle className="animate-spin" />}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,4 @@
-import React from "react";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -8,26 +7,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export const LoadingTableUI = ({
   columns = 5,
   rows = 5,
+  indexed = true,
 }: {
   columns?: number;
   rows?: number;
+  indexed?: boolean;
 }) => {
   return (
     <section className="border rounded-xl overflow-hidden mb-8">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">
-              <Skeleton className="w-full h-4" />
-            </TableHead>
+            {indexed && (
+              <TableHead className="w-12">
+                <Skeleton className="w-full h-4" />
+              </TableHead>
+            )}
             {Array.from({ length: columns }, (_, i) => i).map((number) => (
               <TableHead key={number}>
-                <Skeleton className="w-full h-4" />
+                <Skeleton className="w-full min-w-32 h-4" />
               </TableHead>
             ))}
           </TableRow>
@@ -35,12 +37,14 @@ export const LoadingTableUI = ({
         <TableBody>
           {Array.from({ length: rows }, (_, i) => i + 1).map((number) => (
             <TableRow key={number}>
-              <TableCell className="w-12">
-                <Skeleton className="w-full h-4" />
-              </TableCell>
+              {indexed && (
+                <TableCell className="w-12">
+                  <Skeleton className="w-full h-4" />
+                </TableCell>
+              )}
               {Array.from({ length: columns }, (_, i) => i).map((number) => (
                 <TableCell key={number}>
-                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full min-w-32 h-4" />
                 </TableCell>
               ))}
             </TableRow>

@@ -1,24 +1,19 @@
-import { LEAVE_STATUS } from "@/enum";
-import { VariantProps } from "class-variance-authority";
-import { buttonVariants } from "../ui/button";
-
+import type { LEAVE_STATUS } from "@/enum";
 import type {
   LeaveRemarkTableSelectType,
+  SessionType,
   UserTableSelectType,
-} from "@/db/types";
-import type { SessionType } from "@/types";
+} from "@/types";
 
 export interface LeaveRemarksFormProps {
   leaveId: string;
-  leaveStatus: keyof typeof LEAVE_STATUS | null;
-  remarkCount: number;
+  leaveStatus: keyof typeof LEAVE_STATUS;
   session: SessionType;
-  buttonVariant?: VariantProps<typeof buttonVariants>["variant"];
-  bubbleUp?: boolean;
 }
 
 export interface LeaveRemarksHookProps {
   leaveId: string;
+  leaveStatus: keyof typeof LEAVE_STATUS;
   session: SessionType;
 }
 

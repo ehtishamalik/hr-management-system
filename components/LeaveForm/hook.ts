@@ -1,35 +1,53 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { useCallback, useEffect, useRef, useState } from "react";
+import DOMPurify from "isomorphic-dompurify";
+
+import { useCallback, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { differenceInCalendarDays, isValid } from "date-fns";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { LEAVE_STATUS } from "@/enum";
-import { formatDate } from "@/lib/utils";
-import { UNKNOWN_ERROR } from "@/constants";
-import { authClient } from "@/lib/auth-client";
+import { LEAVE_STATUS, ROLE } from "@/enum";
+import { authClient } from "@/lib/auth/auth-client";
+import { leaveFormSchema } from "@/lib/schema/leave";
+import { withErrorHandling, handleServerResponse } from "@/lib/error-handling";
+import {
+  getActiveLeaveYear,
+  formatDate,
+  isRichTextEmpty,
+  toDateInputValue,
+} from "@/lib/utils";
 
-import type { LeaveFormHookProps, LeaveFormSchemaType } from "./types";
-import type { LeaveTableInsertType } from "@/db/types";
-import { LEAVE_FORM_SCHEMA } from "./schema";
+import type { LeaveTableInsertType } from "@/types";
+import type { UseLeaveFormProps, LeaveFormSchemaType } from "./types";
 
-export const useLeaveForm = ({ userId }: LeaveFormHookProps) => {
+export const useLeaveForm = ({ userId, editData }: UseLeaveFormProps) => {
   const router = useRouter();
-  const buttonRef = useRef<HTMLButtonElement>(null);
+
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: session, isPending } = authClient.useSession();
-
   const form = useForm<LeaveFormSchemaType>({
-    resolver: zodResolver(LEAVE_FORM_SCHEMA),
-    defaultValues: {},
+    resolver: zodResolver(leaveFormSchema),
+    defaultValues: editData
+      ? {
+          date: {
+            from: new Date(editData.fromDate),
+            to: new Date(editData.toDate),
+          },
+          numberOfDays: editData.numberOfDays,
+          leaveTypeId: editData.leaveTypeId,
+          reason: editData.reason,
+        }
+      : {},
   });
 
-  const { setValue, watch } = form;
-  const dateRange = watch("date");
-  const numberOfDays = watch("numberOfDays");
+  const dateRange = form.watch("date");
+  const numberOfDays = form.watch("numberOfDays");
+  const leaveTypeId = form.watch("leaveTypeId");
+
+  const effectiveDays =
+    leaveTypeId === "half-day" ? numberOfDays * 0.5 : numberOfDays;
 
   useEffect(() => {
     const from = dateRange?.from;
@@ -37,15 +55,11 @@ export const useLeaveForm = ({ userId }: LeaveFormHookProps) => {
 
     if (from && isValid(from) && to && isValid(to)) {
       const numDays = differenceInCalendarDays(to, from) + 1;
-      setValue("numberOfDays", numDays > 0 ? numDays : 0);
+      form.setValue("numberOfDays", numDays > 0 ? numDays : 0);
     } else {
-      setValue("numberOfDays", 0);
+      form.setValue("numberOfDays", 0);
     }
-  }, [dateRange, setValue]);
-
-  const handleCloseDialog = () => {
-    buttonRef.current?.click();
-  };
+  }, [dateRange, form]);
 
   const onSubmit = useCallback(
     async (values: LeaveFormSchemaType) => {
@@ -54,9 +68,39 @@ export const useLeaveForm = ({ userId }: LeaveFormHookProps) => {
       const fromDate = date.from;
       const toDate = date.to ?? fromDate;
 
+      if (fromDate.getFullYear() !== toDate.getFullYear()) {
+        toast.error("Invalid Date Range", {
+          description: "The start and end dates must be within the same year.",
+        });
+        return;
+      }
+
+      if (leaveTypeId === "half-day" && numberOfDays > 1) {
+        toast.error("Invalid Date Range", {
+          description: "Half-day leave can only be for a single day.",
+        });
+        return;
+      }
+
+      if (isRichTextEmpty(values.reason)) {
+        form.setError("reason", {
+          message:
+            "Reason content cannot be empty. Please provide valid content for the reason.",
+        });
+        return;
+      }
+
+      setIsLoading(true);
+
+      const { data: session } = await authClient.getSession({
+        query: {
+          disableCookieCache: true,
+        },
+      });
+
       if (!session?.user.id) {
-        toast.error("You must be logged in to perform this action.", {
-          description: "Please log in to continue.",
+        toast.error("You are no longer logged in.", {
+          description: "Please log in to continue or refresh the page.",
           action: {
             label: "login",
             onClick: () => {
@@ -67,73 +111,76 @@ export const useLeaveForm = ({ userId }: LeaveFormHookProps) => {
         return;
       }
 
-      const newLeave: Omit<LeaveTableInsertType, "leaveYearId"> = {
-        userId: userId ? userId : session.user.id,
-        fromDate: fromDate.toDateString(),
-        toDate: toDate.toDateString(),
+      const newLeave: LeaveTableInsertType = {
+        userId: userId ? userId : editData?.userId || session.user.id,
+        fromDate: toDateInputValue(fromDate),
+        toDate: toDateInputValue(toDate),
         leaveTypeId: leaveTypeId,
-        reason,
+        leaveYear: getActiveLeaveYear(),
+        reason: DOMPurify.sanitize(reason),
         numberOfDays,
-        ...(userId
+        ...(userId && !editData
           ? {
               leaveStatus: LEAVE_STATUS.APPROVED,
             }
           : {}),
       };
 
-      setIsLoading(true);
+      await withErrorHandling(
+        async () => {
+          const response = await fetch(
+            editData ? `/api/leave/${editData.id}` : "/api/leave",
+            {
+              method: editData ? "PUT" : "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(newLeave),
+            },
+          );
 
-      try {
-        const response = await fetch("/api/leave", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newLeave),
-        });
+          handleServerResponse(response, () => {
+            toast.success(
+              editData
+                ? "Leave Updated"
+                : userId
+                  ? "Leave Recorded"
+                  : "Leave Requested",
+              {
+                description: `Leave from ${formatDate(
+                  newLeave.fromDate,
+                )} to ${formatDate(newLeave.toDate)} has been ${
+                  editData ? "updated" : userId ? "recorded" : "submitted"
+                }.`,
+              },
+            );
 
-        const { success, error } = await response.json();
+            const role = (session.user as { role?: string }).role || ROLE.USER;
 
-        if (response.ok && success) {
-          toast.success("Leave Requested", {
-            description: `Leave from ${formatDate(
-              newLeave.fromDate
-            )} to ${formatDate(newLeave.toDate)} has been ${
-              userId ? "recorded" : "submitted"
-            }.`,
+            if (editData) {
+              router.push(
+                role === ROLE.ADMIN
+                  ? `/admin/balances/${editData.userId}`
+                  : `/leave/view/${editData.id}`,
+              );
+            } else {
+              router.push(userId ? `/admin/balances/${userId}` : "/");
+            }
           });
-          if (userId) {
-            form.reset();
-            handleCloseDialog();
-            router.refresh();
-          } else {
-            router.push("/");
-          }
-        } else {
-          toast.error("Failed to Request Leave", {
-            description: error || UNKNOWN_ERROR,
-          });
-        }
-      } catch (error) {
-        console.error("[ERROR]: ", error);
+        },
+        `Failed to ${editData ? "Update" : userId ? "Record" : "Request"} Leave`,
+      );
 
-        toast.error("Failed to Request Leave", {
-          description: UNKNOWN_ERROR,
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     },
-    [form, router, session, userId]
+    [router, userId, form, editData],
   );
 
   return {
     form,
-    isLoading: isLoading || !session || isPending,
-    numberOfDays,
+    isLoading: isLoading,
+    numberOfDays: effectiveDays,
     userId,
-    buttonRef,
     onSubmit,
-    handleCloseDialog,
   };
 };

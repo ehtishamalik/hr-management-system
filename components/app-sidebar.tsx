@@ -1,20 +1,13 @@
-import Link from "next/link";
-import logo from "@/public/android-chrome-192x192.png";
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import logo from "@/public/logo.png";
+import logoWhite from "@/public/logo_white.png";
+import logoSmall from "@/public/android-chrome-192x192.png";
 
-import {
-  Home,
-  Search,
-  Send,
-  Users,
-  SquareKanban,
-  UsersRound,
-  Coins,
-  FileChartColumnIncreasing,
-  Columns4,
-  Settings,
-} from "lucide-react";
-
+import { usePathname } from "next/navigation";
+import { cn, getRoleStatues } from "@/lib/utils";
 import {
   Sidebar,
   SidebarContent,
@@ -24,104 +17,107 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
+  sidebarMenuButtonVariants,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
-
-import { ROLE } from "@/enum";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import type { SessionType } from "@/types";
+import { adminItems, adminPFItems, managerItems, userItems } from "@/constants";
+import {
+  ChartCandlestickIcon,
+  ChevronRightIcon,
+  RefreshCwIcon,
+} from "lucide-react";
 
-const userItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Apply for Leave",
-    url: "/leave/apply",
-    icon: Send,
-  },
-  {
-    title: "My Leaves",
-    url: "/leave/history",
-    icon: Search,
-  },
-  {
-    title: "Policies",
-    url: "/policies",
-    icon: Columns4,
-  },
-];
-
-const managerItems = [
-  {
-    title: "Leave Requests",
-    url: "/manager/requests",
-    icon: SquareKanban,
-  },
-  {
-    title: "Team Overview",
-    url: "/manager/team",
-    icon: Users,
-  },
-];
-
-const adminItems = [
-  {
-    title: "Users",
-    url: "/admin/users",
-    icon: UsersRound,
-  },
-  {
-    title: "Leave Balances",
-    url: "/admin/balances",
-    icon: Coins,
-  },
-  {
-    title: "Leave Management",
-    url: "/admin/leave-types",
-    icon: FileChartColumnIncreasing,
-  },
-  {
-    title: "Policies Management",
-    url: "/admin/policies",
-    icon: Columns4,
-  },
-  {
-    title: "Settings",
-    url: "/admin/settings",
-    icon: Settings,
-  },
-];
+const CreateToolTip = () => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <RefreshCwIcon className="ml-auto opacity-0 group-hover/child:opacity-50 text-muted-foreground" />
+    </TooltipTrigger>
+    <TooltipContent side="right">
+      <p>Click to refresh</p>
+    </TooltipContent>
+  </Tooltip>
+);
 
 export const AppSidebar = ({ session }: { session: SessionType }) => {
-  const isManager =
-    session.user?.role === ROLE.MANAGER || session.user?.role === ROLE.ADMIN;
-  const isAdmin = session.user?.role === ROLE.ADMIN;
+  const sidebar = useSidebar();
+  const pathname = usePathname();
+
+  const { state, setOpenMobile } = sidebar;
+
+  const { isManager, isAdmin } = getRoleStatues(session);
+
+  const handleClick = () => {
+    setOpenMobile(false);
+  };
+
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
         <Image
           src={logo}
           alt="company logo"
-          height={96}
-          width={96}
-          className="w-24 h-24 mx-auto object-cover"
+          className={cn("dark:hidden", {
+            hidden: state === "collapsed",
+          })}
+          width={192}
+          priority
+        />
+        <Image
+          src={logoWhite}
+          alt="company logo"
+          className={cn("hidden dark:block", {
+            "hidden!": state === "collapsed",
+          })}
+          width={192}
+          priority
+        />
+        <Image
+          src={logoSmall}
+          alt="company logo"
+          className={cn("pt-2.5", {
+            hidden: state === "expanded",
+          })}
+          width={48}
           priority
         />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Your Tools</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {userItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={
+                      item.url === "/"
+                        ? pathname === "/"
+                        : pathname.startsWith(item.url)
+                    }
+                  >
+                    <Link
+                      href={item.url}
+                      onClick={handleClick}
+                      className="group/child"
+                    >
                       <item.icon />
                       <span>{item.title}</span>
+                      {pathname === item.url && <CreateToolTip />}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -130,17 +126,30 @@ export const AppSidebar = ({ session }: { session: SessionType }) => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isManager && (
+        {(isManager || isAdmin) && (
           <SidebarGroup>
             <SidebarGroupLabel>Team Management</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {managerItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={
+                        item.url === "/"
+                          ? pathname === "/"
+                          : pathname.startsWith(item.url)
+                      }
+                    >
+                      <Link
+                        href={item.url}
+                        onClick={handleClick}
+                        className="group/child"
+                      >
                         <item.icon />
                         <span>{item.title}</span>
+                        {pathname === item.url && <CreateToolTip />}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -155,12 +164,65 @@ export const AppSidebar = ({ session }: { session: SessionType }) => {
             <SidebarGroupLabel>Administrator</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
+                <Collapsible className="group/collapsible">
+                  <CollapsibleTrigger
+                    className={cn(sidebarMenuButtonVariants())}
+                  >
+                    <ChartCandlestickIcon />
+                    PF Management
+                    <ChevronRightIcon className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {adminPFItems.map((item) => (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              className="pl-5"
+                              tooltip={item.title}
+                              isActive={
+                                item.url === "/"
+                                  ? pathname === "/"
+                                  : pathname.startsWith(item.url)
+                              }
+                            >
+                              <Link
+                                href={item.url}
+                                onClick={handleClick}
+                                className="group/child"
+                              >
+                                <item.icon />
+                                <span>{item.title}</span>
+                                {pathname === item.url && <CreateToolTip />}
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </Collapsible>
                 {adminItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={
+                        item.url === "/"
+                          ? pathname === "/"
+                          : pathname.startsWith(item.url)
+                      }
+                    >
+                      <Link
+                        href={item.url}
+                        onClick={handleClick}
+                        className="group/child"
+                      >
                         <item.icon />
                         <span>{item.title}</span>
+                        {pathname === item.url && <CreateToolTip />}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

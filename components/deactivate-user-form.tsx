@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import { BanIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { STATUS } from "@/enum";
+import { useSession } from "@/lib/auth/auth-client";
 import { Button } from "./ui/button";
-
+import { Spinner } from "./ui/spinner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,9 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UNKNOWN_ERROR } from "@/constants";
-import { STATUS } from "@/enum";
-import { authClient } from "@/lib/auth-client";
+import { handleServerResponse, withErrorHandling } from "@/lib/error-handling";
 
 interface DeactivateUserFormProps {
   id: string;
@@ -29,17 +29,31 @@ export const DeactivateUserForm = ({ id }: DeactivateUserFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { data: session } = authClient.useSession();
+  const { data: session } = useSession();
 
   const handleDelete = async () => {
+    if (!session) {
+      toast.error("Forbidden", {
+        description: "You must be logged in to perform this action.",
+      });
+      return;
+    }
+
+    if (session?.user.id === id) {
+      toast.error("Forbidden", {
+        description: "You cannot deactivate your own account.",
+      });
+      return;
+    }
+
     const submitValue = {
       status: STATUS.INACTIVE,
     };
 
     setIsLoading(true);
 
-    try {
-      const response = await fetch(`/api/user?id=${id}`, {
+    await withErrorHandling(async () => {
+      const response = await fetch(`/api/users/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -47,39 +61,22 @@ export const DeactivateUserForm = ({ id }: DeactivateUserFormProps) => {
         body: JSON.stringify(submitValue),
       });
 
-      const { success, error } = await response.json();
-
-      setIsLoading(false);
-
-      if (response.ok && success) {
-        toast.success("User Deactivated.", {
-          description: "The user has been deactivated successfully.",
+      handleServerResponse(response, async () => {
+        toast.success("Employee Deactivated.", {
+          description: "The employee has been deactivated successfully.",
         });
-        if (id === session?.user.id) {
-          await authClient.signOut();
-        } else {
-          router.push("/admin/users");
-        }
-      } else {
-        toast.error("Could not deactivate user.", {
-          description: error || UNKNOWN_ERROR,
-        });
-      }
-    } catch (error) {
-      console.error("Error deactivating user:", error);
-
-      toast.error("Failed to deactivate user.", {
-        description: UNKNOWN_ERROR,
+        router.push("/admin/users");
       });
-    }
+    }, "Failed to deactivate employee.");
+    setIsLoading(false);
   };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
+        <Button variant="destructive" disabled={isLoading}>
           Deactivate
-          {isLoading && <LoaderCircle className="animate-spin" />}
+          {isLoading ? <Spinner /> : <BanIcon />}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

@@ -1,107 +1,33 @@
 import { db } from "@/db/drizzle";
 import { PolicyTable } from "@/db/schema";
-import { handleError } from "@/lib/error";
-import { getValueFromRequest } from "@/lib/utils";
-import { eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/withAuth";
+import { withAuth } from "@/lib/auth/with-auth";
+import { ROLE } from "@/enum";
 
-import type { CustomResponse } from "@/types";
+import { type NextRequest, NextResponse } from "next/server";
+import type { PolicyTableInsertType, PolicyTableSelectType } from "@/types";
+import type { ApiResponse } from "@/types";
 
-// GET /api/policy or /api/policy?id=uuid
-export const GET = withAuth(async (request: NextRequest) => {
-  const id = getValueFromRequest(request, "id");
+// GET /api/policy — any authenticated user
+export const GET = withAuth(async () => {
+  const data = await db.select().from(PolicyTable);
+  return NextResponse.json<ApiResponse<PolicyTableSelectType[]>>({
+    success: true,
+    data,
+  });
+}, "Error at api/policy (GET)");
 
-  try {
-    if (id) {
-      const [data] = await db
-        .select()
-        .from(PolicyTable)
-        .where(eq(PolicyTable.id, id));
-
-      if (!data) {
-        return NextResponse.json<CustomResponse>(
-          { success: false, error: "Policy not found." },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json<CustomResponse>({ success: true, data });
-    }
-
-    const data = await db.select().from(PolicyTable);
-    return NextResponse.json<CustomResponse>({ success: true, data });
-  } catch (error) {
-    const errorMessage = handleError("Policy GET error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
-
-// POST /api/policy
-export const POST = withAuth(async (request: NextRequest) => {
-  try {
-    const body = await request.json();
+// POST /api/policy — ADMIN only
+export const POST = withAuth(
+  async (request: NextRequest) => {
+    const body: PolicyTableInsertType = await request.json();
 
     const result = await db.insert(PolicyTable).values(body).returning();
 
-    return NextResponse.json<CustomResponse>(
-      { success: true, data: result[0] },
-      { status: 201 }
-    );
-  } catch (error) {
-    const errorMessage = handleError("Policy POST error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
-
-// PUT /api/policy?id=uuid
-export const PUT = withAuth(async (request: NextRequest) => {
-  const id = getValueFromRequest(request, "id");
-
-  if (!id) {
-    return NextResponse.json<CustomResponse>(
-      { success: false, error: "Missing 'id' in query parameters." },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const body = await request.json();
-    const updatedData = { ...body, updatedAt: new Date() };
-
-    const [result] = await db
-      .update(PolicyTable)
-      .set(updatedData)
-      .where(eq(PolicyTable.id, id))
-      .returning();
-
-    return NextResponse.json<CustomResponse>({ success: true, data: result });
-  } catch (error) {
-    const errorMessage = handleError("Policy PUT error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
-
-// DELETE /api/policy?id=uuid
-export const DELETE = withAuth(async (request: NextRequest) => {
-  const id = getValueFromRequest(request, "id");
-
-  if (!id) {
-    return NextResponse.json<CustomResponse>(
-      { success: false, error: "Missing 'id' in query parameters." },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const [result] = await db
-      .delete(PolicyTable)
-      .where(eq(PolicyTable.id, id))
-      .returning();
-
-    return NextResponse.json<CustomResponse>({ success: true, data: result });
-  } catch (error) {
-    const errorMessage = handleError("Policy DELETE error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
+    return NextResponse.json<ApiResponse<PolicyTableSelectType>>({
+      success: true,
+      data: result[0],
+    });
+  },
+  "Error at api/policy (POST)",
+  [ROLE.ADMIN],
+);

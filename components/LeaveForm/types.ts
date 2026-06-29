@@ -1,17 +1,18 @@
-import z from "zod";
+import type { LeaveDefinition, LeaveTableSelectType } from "@/types";
 
-import { LEAVE_FORM_SCHEMA } from "./schema";
-
-import type { LeaveTypeTableSelectType } from "@/db/types";
+export type { LeaveFormSchemaType } from "@/lib/schema/leave";
 
 export interface LeaveFormProps {
-  leaveTypes: LeaveTypeTableSelectType[];
+  leaveTypes: LeaveDefinition[];
   userId?: string;
   calendarDisabled?: boolean;
+  editData?: LeaveTableSelectType;
+  isAdmin?: boolean;
+  isOwner?: boolean;
 }
 
-export interface LeaveFormHookProps {
+export interface UseLeaveFormProps {
   userId?: string;
+  editData?: LeaveTableSelectType;
+  isAdmin?: boolean;
 }
-
-export type LeaveFormSchemaType = z.infer<typeof LEAVE_FORM_SCHEMA>;

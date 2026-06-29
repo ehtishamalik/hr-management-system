@@ -1,14 +1,14 @@
-import React from "react";
-import ToastError from "@/components/toast-error";
+export const dynamic = "force-dynamic";
 
-import { redirect } from "next/navigation";
-import {
-  getTeamMembers,
-  getUpcomingApprovedLeavesByUser,
-} from "@/lib/helpers/manager/team";
-import { getLeaveStatusClass } from "@/lib/utils";
-import { getUserLeaveStats } from "@/lib/helpers/admin/balances";
+import Headline from "@/components/headline";
+import NotFoundBanner from "@/components/not-found-banner";
 
+import { getUserLeaveStats } from "@/services/leave-stats";
+import { getUserUpcomingLeaves } from "@/services/leave";
+import { getTeamMembers } from "@/services/user";
+import { formatDate, getLeaveStatusClass, toDateInputValue } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { getSession } from "@/lib/auth/session";
 import {
   Table,
   TableBody,
@@ -18,58 +18,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
 const Team = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session || !session.user?.id) {
-    redirect("/login");
-  }
-
+  const session = await getSession();
   const teamMembers = await getTeamMembers(session.user.id);
-
-  if (!teamMembers) {
-    return <ToastError message="Error fetching team members." />;
-  }
 
   if (teamMembers.length === 0) {
     return (
       <>
-        <h1 className="text-2xl font-medium mb-8">Team Overview</h1>
-
-        <h4 className="text-base font-medium text-muted-foreground">
-          You do not have any assigned team member.
-        </h4>
+        <Headline>Team Overview</Headline>
+        <NotFoundBanner
+          headline="No Team Members"
+          description="You do not have any assigned team members."
+        />
       </>
     );
   }
 
   const teamLeaves = await Promise.all(
     teamMembers.map(async ({ user, user_detail }) => {
-      const leaveStats = await getUserLeaveStats(user.id);
+      const leaveStats = await getUserLeaveStats(user.id, false);
       return {
         ...user,
         ...user_detail,
         leaveStats,
       };
-    })
+    }),
   );
 
   const upcomingLeaves = (
     await Promise.all(
-      teamMembers.map(({ user }) => getUpcomingApprovedLeavesByUser(user.id))
+      teamMembers.map(({ user }) => getUserUpcomingLeaves(user.id)),
     )
   ).flat();
 
   return (
     <>
-      <h1 className="text-2xl font-medium mb-8">Team Overview</h1>
+      <Headline>Team Overview</Headline>
 
-      <section className="border rounded-xl overflow-hidden mb-8">
+      <section className="border rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -86,8 +73,14 @@ const Team = async () => {
               <TableRow key={user.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{user.name}</TableCell>
-                <TableCell className="capitalize">
-                  {user?.role?.toLowerCase()}
+                <TableCell>
+                  {user?.role ? (
+                    <Badge variant="outline" size="sm" className="capitalize">
+                      {user.role.toLocaleLowerCase()}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">None</span>
+                  )}
                 </TableCell>
 
                 {user.leaveStats.map((leave) => (
@@ -103,65 +96,58 @@ const Team = async () => {
         </Table>
       </section>
 
-      <section className="mb-8">
-        <h3 className="text-lg font-medium mb-3">Upcoming leaves</h3>
-        <div className="border rounded-xl overflow-hidden">
-          <Table>
-            {upcomingLeaves.length === 0 ? (
-              <TableCaption>Hooray!! No upcoming leave right now.</TableCaption>
-            ) : null}
+      <Headline type="h3" className="mb-4">
+        Upcoming leaves
+      </Headline>
 
-            <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Leave Type</TableHead>
-                <TableHead>From</TableHead>
-                <TableHead>To</TableHead>
-                <TableHead>Days</TableHead>
-                <TableHead>Leave Status</TableHead>
-                <TableHead>Status</TableHead>
+      <section className="border rounded-xl overflow-hidden">
+        <Table>
+          {upcomingLeaves.length === 0 ? (
+            <TableCaption>
+              WOW! No upcoming leaves. Team must be working really hard, I guess
+            </TableCaption>
+          ) : null}
+
+          <TableHeader>
+            <TableRow>
+              <TableHead>#</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Leave Type</TableHead>
+              <TableHead>From</TableHead>
+              <TableHead>To</TableHead>
+              <TableHead>Days</TableHead>
+              <TableHead>Leave Status</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {upcomingLeaves.map((item, index) => (
+              <TableRow key={item.leave.id}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{item.user.name}</TableCell>
+                <TableCell>
+                  {item.leave.leaveTypeId.charAt(0).toUpperCase() +
+                    item.leave.leaveTypeId.slice(1)}
+                </TableCell>
+                <TableCell>{formatDate(item.leave.fromDate)}</TableCell>
+                <TableCell>{formatDate(item.leave.toDate)}</TableCell>
+                <TableCell>{item.leave.numberOfDays}</TableCell>
+                <TableCell
+                  className={getLeaveStatusClass(item.leave.leaveStatus)}
+                >
+                  {item.leave.leaveStatus}
+                </TableCell>
+                <TableCell className="font-medium">
+                  {item.leave.fromDate > toDateInputValue() ? (
+                    <span className="text-fuchsia-600">UPCOMING</span>
+                  ) : (
+                    <span className="text-amber-600">ONGOING</span>
+                  )}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingLeaves.map((item, index) => (
-                <TableRow key={item.leave.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{item.user.name}</TableCell>
-                  <TableCell>{item.leave_type.name}</TableCell>
-                  <TableCell>
-                    {new Date(item.leave.fromDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(item.leave.toDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </TableCell>
-                  <TableCell>{item.leave.numberOfDays}</TableCell>
-                  <TableCell
-                    className={getLeaveStatusClass(item.leave.leaveStatus)}
-                  >
-                    {item.leave.leaveStatus}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {new Date(item.leave.fromDate).setHours(0, 0, 0, 0) >
-                    new Date().setHours(0, 0, 0, 0) ? (
-                      <span className="text-fuchsia-600">UPCOMING</span>
-                    ) : (
-                      <span className="text-emerald-600">ONGOING</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </section>
     </>
   );

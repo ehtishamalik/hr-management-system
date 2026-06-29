@@ -1,17 +1,6 @@
-import z from "zod";
-
-import { PolicyFormSchema } from "./schema";
-
-import type { PolicyTableSelectType } from "@/db/types";
+import type { PolicyTableSelectType } from "@/types";
+export type { PolicyFormSchemaType } from "@/lib/schema/policy";
 
 export interface PolicyFormProps {
   policy: PolicyTableSelectType | null;
-}
-
-export type PolicyFormSchemaType = z.infer<typeof PolicyFormSchema>;
-
-export interface handlePolicyActionProps {
-  values: PolicyFormSchemaType;
-  isActive?: boolean;
-  isSaveDraft?: boolean;
 }

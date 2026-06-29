@@ -1,6 +1,6 @@
 {
   // Set Prettier as the default formatter for TypeScript and TSX files
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "biomejs.biome",
 
   // Enable format on save
   "editor.formatOnSave": true,
@@ -10,20 +10,14 @@
 
   // Enable Prettier for specific languages
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
 
   // Use VSCode's built-in formatter for CSS files
   "[css]": {
-    "editor.defaultFormatter": "vscode.css-language-features"
-  },
-
-  // Optional: Customize Prettier settings
-  "prettier.singleQuote": false,
-  "prettier.trailingComma": "es5",
-  "prettier.tabWidth": 2,
-  "prettier.semi": true
+    "editor.defaultFormatter": "biomejs.biome"
+  }
 }

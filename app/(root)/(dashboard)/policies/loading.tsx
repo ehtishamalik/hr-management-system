@@ -1,20 +1,18 @@
-import React from "react";
+import Headline from "@/components/headline";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Loading = () => {
   return (
-    <section>
-      <h1 className="text-2xl font-medium mb-8">Policies</h1>
+    <>
+      <Headline>Company Policies</Headline>
 
-      <section className="mb-8">
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
-          <Skeleton className="h-52 w-full" />
-          <Skeleton className="h-52 w-full" />
-          <Skeleton className="h-52 w-full" />
-        </div>
+      <section className="grid-flexible">
+        {[1, 2, 3].map((index) => (
+          <Skeleton key={index} className="h-52 w-full" />
+        ))}
       </section>
-    </section>
+    </>
   );
 };
 

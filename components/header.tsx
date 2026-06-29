@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
 import Link from "next/link";
 
-import { authClient } from "@/lib/auth-client";
-import { SidebarTrigger } from "./ui/sidebar";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { signOut } from "@/lib/auth/auth-client";
 import { getInitials } from "@/lib/utils";
-import { SetTheme } from "./set-theme";
-import { LoaderCircle } from "lucide-react";
-
+import { SetMode } from "@/components/set-mode";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,50 +20,52 @@ import {
 import type { SessionType } from "@/types";
 
 export const Header = ({ session }: { session: SessionType }) => {
-  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
 
   return (
-    <header className="bg-sidebar">
-      <div className="flex justify-between items-center py-4 pr-14 pl-4">
-        <SidebarTrigger />
+    <header className="bg-sidebar rounded-lg m-4">
+      <div className="flex justify-end md:justify-between items-center p-4">
+        <SidebarTrigger className="hidden md:flex" />
 
         <div className="flex items-center gap-4">
-          <SetTheme />
+          <SetMode />
 
           <DropdownMenu>
-            <DropdownMenuTrigger className="border rounded-full">
-              <Avatar className="size-10">
+            <DropdownMenuTrigger className="border rounded-full" asChild>
+              <Avatar className="size-10" id="header-dropdown-avatar">
                 <AvatarImage src={session.user?.image || ""} />
                 <AvatarFallback className="font-medium">
                   {getInitials(session.user?.name || "")}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end">
               <DropdownMenuLabel>
-                {session.user?.name || "My Account"}
+                <div>
+                  <p className="text-base">
+                    {session.user?.name || "My Account"}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {session.user?.email || ""}
+                  </p>
+                </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
+                <Link href="/account">My Account</Link>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
-                  setLoggingOut(true);
-                  await authClient.signOut({
+                  await signOut({
                     fetchOptions: {
                       onSuccess: () => {
-                        setLoggingOut(false);
-                        window.location.reload();
+                        router.push("/login");
                       },
                     },
                   });
                 }}
               >
-                Logout{" "}
-                {loggingOut && (
-                  <LoaderCircle className="inline-block animate-spin" />
-                )}
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

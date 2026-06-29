@@ -1,105 +1,43 @@
 import { Resend } from "resend";
-import { sendSlackErrorNotification } from "@/lib/slackNotifier";
-import { OTPEmailTemplate } from "@/components/EmailTemplates";
-import { LeaveRequestEmail } from "@/components/EmailTemplates";
-import { handleErrorWithSlack } from "@/lib/error";
-import { MagicLinkEmailTemplate } from "@/components/EmailTemplates";
+import { handleErrorWithSlack } from "@/lib/error-handling";
+import { sendSlackNotification } from "@/lib/slack-notifier";
+import { ORIGIN_URL } from "@/constants";
+import { formatDateWithDay } from "@/lib/utils";
 
-import type { CustomResponse, UserType } from "@/types";
-import type { LeaveTableInsertType } from "@/db/types";
-import { UNKNOWN_ERROR } from "@/constants";
+import type { LeaveTableInsertType } from "@/types";
+import type { UserType } from "@/types";
 
 class EmailService {
-  private resend: Resend;
-  private from = "";
-  private to: string | undefined = undefined;
+  private resend: Resend | null = null;
+  private to: string = "";
+  private isEnabled: boolean = false;
 
   constructor() {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error(
-        "RESEND_API_KEY is not defined in environment variables."
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+      console.warn(
+        "[EmailService] RESEND_API_KEY is missing. Email sending is disabled.",
       );
+      this.isEnabled = false;
+      return;
     }
 
-    if (!process.env.RESEND_FROM) {
-      throw new Error("RESEND_FROM is not defined in environment variables.");
-    }
-
-    this.resend = new Resend(process.env.RESEND_API_KEY);
-    this.from = process.env.RESEND_FROM;
-    this.to = process.env.RESEND_TO;
+    this.resend = new Resend(apiKey);
+    this.to = process.env.RESEND_TO || "";
+    this.isEnabled = true;
   }
 
   getToEmail(email: string) {
-    return this.to ?? email;
+    return this.to ? this.to : email;
   }
 
-  async sendOtpEmail({
-    email,
-    otp,
-  }: {
-    email: string;
-    otp: string;
-  }): Promise<CustomResponse> {
-    try {
-      const { error } = await this.resend.emails.send({
-        from: this.from,
-        to: [this.getToEmail(email)],
-        subject: "OTP Request",
-        react: OTPEmailTemplate({ otp }),
-      });
-
-      if (error) {
-        return {
-          success: false,
-          error: `${error.name}: ${error.message}` || UNKNOWN_ERROR,
-        };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return handleErrorWithSlack(
-        "ERROR sending OTP email, unexpected issue.",
-        error
-      );
+  isDisabled(info: string) {
+    const isDisabled = !this.isEnabled || !this.resend;
+    if (isDisabled) {
+      console.info(`[EmailService Disabled]: ${info}`);
     }
-  }
-
-  async sendMagicLink({
-    email,
-    url,
-  }: {
-    email: string;
-    url: string;
-  }): Promise<CustomResponse> {
-    try {
-      const { error } = await this.resend.emails.send({
-        from: this.from,
-        to: [this.getToEmail(email)],
-        subject: "Login to Your Account",
-        react: MagicLinkEmailTemplate({ url }),
-      });
-
-      if (error) {
-        await sendSlackErrorNotification("Resend Error: Magic Link", {
-          email,
-          url,
-          error,
-        });
-
-        return { success: false, error: error.message || "Unknown error" };
-      }
-
-      return { success: true };
-    } catch (err) {
-      await handleErrorWithSlack("Unhandled exception in sendMagicLink", {
-        email,
-        url,
-        err,
-      });
-
-      return { success: false, error: "Unexpected error sending magic link" };
-    }
+    return isDisabled;
   }
 
   async sendLeaveRequestEmail({
@@ -111,21 +49,42 @@ class EmailService {
     leave: LeaveTableInsertType;
     user: UserType;
   }): Promise<void> {
+    const info = `Sending leave request email to ${this.getToEmail(email)} from ${user.user.name}`;
+
+    // 🚫 If disabled → just log and exit
+    if (this.isDisabled(info)) return;
+
     try {
-      const { error } = await this.resend.emails.send({
-        from: this.from,
+      console.info(info);
+      // biome-ignore lint/style/noNonNullAssertion: It is checked above
+      const { error } = await this.resend!.emails.send({
         to: [this.getToEmail(email)],
-        subject: "Leave Requested",
-        react: LeaveRequestEmail({ leave, user }),
+        replyTo: user.user.email,
+        template: {
+          id: "leave-request",
+          variables: {
+            USER_NAME: user.user.name,
+            USER_EMAIL: user.user.email,
+            LEAVE_FROM: formatDateWithDay(leave.fromDate),
+            LEAVE_TO: formatDateWithDay(leave.toDate),
+            LEAVE_DAYS: leave.numberOfDays,
+            LEAVE_REASON: leave.reason,
+            LEAVE_URL: `${ORIGIN_URL}/manager/requests`,
+          },
+        },
       });
 
       if (error) {
-        sendSlackErrorNotification("ERROR sending Leave Request email.", error);
+        console.error("[Error]: ", error);
+        sendSlackNotification("ERROR sending Leave Request email.", {
+          info,
+          error,
+        });
       }
     } catch (error) {
       handleErrorWithSlack(
         "Unexpected error while sending Leave Request email.",
-        error
+        error,
       );
     }
   }

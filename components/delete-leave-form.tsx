@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LoaderCircle, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
-
+import { handleServerResponse, withErrorHandling } from "@/lib/error-handling";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UNKNOWN_ERROR } from "@/constants";
 
 interface DeleteLeaveFormProps {
   leaveId: string;
@@ -27,36 +26,39 @@ export const DeleteLeaveForm = ({ leaveId }: DeleteLeaveFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const handleBack = () => {
+    if (document.referrer?.includes(window.location.origin)) {
+      router.back();
+      router.refresh();
+    } else {
+      router.push("/");
+    }
+  };
+
   const handleDelete = async () => {
     setIsLoading(true);
+    await withErrorHandling(async () => {
+      const response = await fetch(`/api/leave/${leaveId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    const response = await fetch(`/api/leave?id=${leaveId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const { success, error } = await response.json();
-
+      handleServerResponse(response, () => {
+        toast.success("Leave Deleted", {
+          description: "Your leave request has been deleted successfully.",
+        });
+        handleBack();
+      });
+    }, "Failed to delete leave request");
     setIsLoading(false);
-
-    if (response.ok && success) {
-      toast.success("Leave Deleted", {
-        description: "Your leave request has been deleted successfully.",
-      });
-      router.push("/");
-    } else {
-      toast.error("Failed to Delete", {
-        description: error || UNKNOWN_ERROR,
-      });
-    }
   };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="lg" disabled={isLoading}>
+        <Button variant="destructive" size="sm" disabled={isLoading}>
           Delete
           {isLoading ? <LoaderCircle className="animate-spin" /> : <Trash2 />}
         </Button>
@@ -72,7 +74,11 @@ export const DeleteLeaveForm = ({ leaveId }: DeleteLeaveFormProps) => {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
               Continue
             </Button>
           </AlertDialogAction>

@@ -1,14 +1,14 @@
-import React from "react";
+import Headline from "@/components/headline";
 
 import { LoadingTableUI } from "@/components/loading-ui";
 
 const Loading = () => {
   return (
-    <section>
-      <h1 className="text-2xl font-medium mb-8">Leave History</h1>
+    <>
+      <Headline>Leave History</Headline>
 
-      <LoadingTableUI columns={7} />
-    </section>
+      <LoadingTableUI columns={6} />
+    </>
   );
 };
 

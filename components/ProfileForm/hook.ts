@@ -1,28 +1,30 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { NOT_ASSIGNED } from "@/constants";
 import { ROLE } from "@/enum";
-import { EMAIL_POSTFIX, UNKNOWN_ERROR } from "@/constants";
-import { USER_FORM_SCHEMA } from "./schema";
+import { toDateInputValue } from "@/lib/utils";
+import { profileFormSchema } from "@/lib/schema/user";
+import { handleServerResponse, withErrorHandling } from "@/lib/error-handling";
 
-import type { ProfileFormProps, UserFormSchemaType } from "./types";
 import type { UserType } from "@/types";
-import { UserDetailTableInsertType, UserTableInsertType } from "@/db/types";
+import type { ProfileFormProps, UserFormSchemaType } from "./types";
 
 export function useProfileForm({
   employee,
-  managementUsers,
+  managers,
+  admins,
 }: ProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(Boolean(employee));
   const [teamLeads, setTeamLeads] = useState<UserType[]>([]);
 
   const form = useForm({
-    resolver: zodResolver(USER_FORM_SCHEMA),
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       fullName: "",
       email: "",
@@ -37,45 +39,27 @@ export function useProfileForm({
       phone: "",
       address: "",
 
+      currency: "PKR",
       salary: "",
       taxAmount: "",
-
-      profileImage: "",
     },
   });
 
-  const userEmployeesTeamLeads = useMemo(
-    () =>
-      managementUsers.filter(
-        (user) =>
-          user.user_detail?.role === ROLE.MANAGER ||
-          user.user_detail?.role === ROLE.ADMIN
-      ),
-    [managementUsers]
-  );
-
-  const managementTeamLeads = useMemo(
-    () =>
-      managementUsers.filter((user) => user.user_detail?.role === ROLE.ADMIN),
-    [managementUsers]
-  );
-
-  const { watch, setValue } = form;
-  const role = watch("role");
+  const role = form.watch("role");
+  const currency = form.watch("currency");
 
   useEffect(() => {
     if (role === ROLE.USER) {
-      setTeamLeads(userEmployeesTeamLeads);
+      setTeamLeads([...managers, ...admins]);
     } else {
-      setTeamLeads(managementTeamLeads);
+      setTeamLeads(admins);
     }
-  }, [role, setValue, userEmployeesTeamLeads, managementTeamLeads]);
-
+  }, [role, managers, admins]);
   useEffect(() => {
     if (employee && role !== employee.user_detail?.role) {
-      setValue("teamLeadId", "");
+      form.setValue("teamLeadId", "");
     }
-  }, [employee, role, setValue, userEmployeesTeamLeads, managementTeamLeads]);
+  }, [employee, role, form]);
 
   useEffect(() => {
     if (employee) {
@@ -83,25 +67,27 @@ export function useProfileForm({
         fullName: employee.user.name,
         email: employee.user.email.split("@")[0],
 
-        employeeId: employee.user_detail?.employeeId,
+        employeeId:
+          employee.user_detail?.employeeId === NOT_ASSIGNED
+            ? ""
+            : employee.user_detail?.employeeId,
         role: employee.user_detail?.role,
         teamLeadId: employee.user_detail?.teamLeadId ?? "",
         designation: employee.user_detail?.designation ?? "",
-        joinedAt: employee.user_detail?.joinedAt ?? "",
+        joinedAt: toDateInputValue(employee.user_detail?.createdAt),
 
         dob: employee.user_detail?.dob ?? "",
         cnic: employee.user_detail?.cnic ?? "",
         phone: employee.user_detail?.phone ?? "",
         address: employee.user_detail?.address ?? "",
 
+        currency: employee.user_detail?.currency || "PKR",
         salary: employee.user_detail?.salary
           ? Number(employee.user_detail?.salary)
           : "",
         taxAmount: employee.user_detail?.taxAmount
           ? Number(employee.user_detail?.taxAmount)
           : "",
-
-        profileImage: employee.user.image ?? "",
       });
 
       setIsLoading(false);
@@ -110,78 +96,51 @@ export function useProfileForm({
 
   const onSubmit = useCallback(
     async (values: UserFormSchemaType) => {
-      const submitValues: UserTableInsertType & UserDetailTableInsertType = {
-        id: "<ID>",
-        userId: "<USER_ID>",
-        name: values.fullName.trim(),
-
-        email: `${values.email.trim().toLowerCase()}${EMAIL_POSTFIX}`,
+      const submitValues = {
         employeeId: values.employeeId.trim(),
         role: values.role,
-        teamLeadId: values.teamLeadId,
-        designation: values.designation?.trim(),
-        joinedAt: values.joinedAt
-          ? new Date(values.joinedAt).toISOString().split("T")[0]
-          : null,
+        ...(values.teamLeadId && { teamLeadId: values.teamLeadId }),
+        ...(values.designation && { designation: values.designation.trim() }),
 
-        dob: values.dob
-          ? new Date(values.dob).toISOString().split("T")[0]
-          : null,
-        cnic: values.cnic?.trim(),
-        phone: values.phone?.trim(),
-        address: values.address?.trim(),
+        dob: values.dob,
+        ...(values.cnic && { cnic: values.cnic }),
+        ...(values.phone && { phone: values.phone }),
+        ...(values.address && { address: values.address.trim() }),
 
-        salary: values.salary ? String(values.salary) : null,
-        taxAmount: values.taxAmount ? String(values.taxAmount) : null,
-
-        image: values.profileImage,
+        currency: values.currency,
+        ...(values.salary && { salary: String(values.salary) }),
+        ...(values.taxAmount && { taxAmount: String(values.taxAmount) }),
       };
 
       setIsLoading(true);
+      const url = `/api/users/${employee.user.id}`;
 
-      const isUpdate = !!employee;
-      const url = isUpdate ? `/api/user?id=${employee.user.id}` : "/api/user";
-
-      try {
+      await withErrorHandling(async () => {
         const response = await fetch(url, {
-          method: isUpdate ? "PUT" : "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(submitValues),
         });
 
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          toast.success(`User profile ${isUpdate ? "Updated" : "Created"}`, {
-            description: `“${values.fullName}” has been successfully ${isUpdate ? "updated" : "created"}.`,
+        handleServerResponse(response, () => {
+          toast.success(`Employee profile Updated`, {
+            description: `“${values.fullName}” has been successfully updated.`,
           });
-          form.reset();
-          router.push("/admin/users");
-        } else {
-          toast.error(`Failed to ${isUpdate ? "Update" : "Add"} User`, {
-            description: data.error || UNKNOWN_ERROR,
-          });
-        }
-      } catch (error) {
-        console.error("[ERROR]: ", error);
-
-        toast.error(`Failed to ${isUpdate ? "Update" : "Add"} Leave`, {
-          description: UNKNOWN_ERROR,
+          router.refresh();
         });
-      } finally {
-        setIsLoading(false);
-      }
+      }, "Failed to Update User");
+      setIsLoading(false);
     },
-    [employee, router, form]
+    [employee, router],
   );
 
   return {
     form,
+    currency,
     isLoading,
     teamLeads,
-    setValue,
     onSubmit,
   };
 }

@@ -1,11 +1,8 @@
-import z from "zod";
-
-import type { USER_FORM_SCHEMA } from "./schema";
 import type { UserType } from "@/types";
+export type { ProfileFormSchemaType as UserFormSchemaType } from "@/lib/schema/user";
 
 export interface ProfileFormProps {
-  managementUsers: UserType[];
-  employee: UserType | null;
+  employee: UserType;
+  managers: UserType[];
+  admins: UserType[];
 }
-
-export type UserFormSchemaType = z.infer<typeof USER_FORM_SCHEMA>;

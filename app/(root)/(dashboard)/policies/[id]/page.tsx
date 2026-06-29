@@ -1,8 +1,7 @@
-import React from "react";
-import ToastError from "@/components/toast-error";
-import DOMPurify from "isomorphic-dompurify";
+import Headline from "@/components/headline";
+import NotFoundBanner from "@/components/not-found-banner";
 
-import { getPolicyById } from "@/lib/helpers/policies";
+import { getPolicyById } from "@/services/policy";
 
 const ViewPolicy = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -11,15 +10,23 @@ const ViewPolicy = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!policy) {
     return (
-      <ToastError message="Error fetching policy" redirectPath="/policies" />
+      <NotFoundBanner
+        headline="Policy Not Found"
+        description="The policy you are looking for does not exist. Please check the URL or contact your administrator."
+      />
     );
   }
 
   return (
-    <section
-      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(policy.policy) }}
-      className="mb-8"
-    />
+    <>
+      <Headline>{policy.title}</Headline>
+      <p className="text-muted-foreground mb-8">{policy.description}</p>
+      <section
+        /* biome-ignore lint/security/noDangerouslySetInnerHtml: Can't be changed */
+        dangerouslySetInnerHTML={{ __html: policy.policy }}
+        className="mb-8"
+      />
+    </>
   );
 };
 

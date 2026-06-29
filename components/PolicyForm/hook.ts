@@ -1,27 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { isRichTextEmpty } from "./helpers";
-import { UNKNOWN_ERROR } from "@/constants";
-import { PolicyFormSchema } from "./schema";
-import { STATUS } from "@/enum";
-import { authClient } from "@/lib/auth-client";
+import DOMPurify from "isomorphic-dompurify";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { STATUS } from "@/enum";
+import { useSession } from "@/lib/auth/auth-client";
+import { isRichTextEmpty } from "@/lib/utils";
+import { policyFormSchema } from "@/lib/schema/policy";
+import { handleServerResponse, withErrorHandling } from "@/lib/error-handling";
+
+import type { PolicyTableInsertType } from "@/types";
 import type { PolicyFormProps, PolicyFormSchemaType } from "./types";
-import type { PolicyTableInsertType } from "@/db/types";
 
 export const usePolicyForm = ({ policy }: PolicyFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(Boolean(policy));
 
-  const { data: session } = authClient.useSession();
+  const { data: session } = useSession();
 
   const form = useForm<PolicyFormSchemaType>({
-    resolver: zodResolver(PolicyFormSchema),
+    resolver: zodResolver(policyFormSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -46,14 +48,15 @@ export const usePolicyForm = ({ policy }: PolicyFormProps) => {
   const onSubmit = useCallback(
     async (values: PolicyFormSchemaType) => {
       if (isRichTextEmpty(values.policy)) {
-        toast.error("Policy content cannot be empty.", {
-          description: "Please provide valid content for the policy.",
+        form.setError("policy", {
+          message:
+            "Policy content cannot be empty. Please provide valid content for the policy.",
         });
         return;
       }
 
       if (!session?.user.id) {
-        toast.error("You must be logged in to perform this action.", {
+        toast.error("You might not be logged in.", {
           description: "Please log in to continue.",
           action: {
             label: "login",
@@ -68,17 +71,16 @@ export const usePolicyForm = ({ policy }: PolicyFormProps) => {
       const submitValues: PolicyTableInsertType = {
         title: values.title,
         description: values.description,
-        policy: values.policy,
+        policy: DOMPurify.sanitize(values.policy),
         isActive: values.isActive === STATUS.ACTIVE,
         createdBy: session.user.id,
       };
 
+      const isUpdate = !!policy?.id;
+      const url = isUpdate ? `/api/policy/${policy.id}` : "/api/policy";
       setIsLoading(true);
 
-      const isUpdate = !!policy?.id;
-      const url = isUpdate ? `/api/policy?id=${policy.id}` : "/api/policy";
-
-      try {
+      await withErrorHandling(async () => {
         const response = await fetch(url, {
           method: isUpdate ? "PUT" : "POST",
           headers: {
@@ -87,9 +89,7 @@ export const usePolicyForm = ({ policy }: PolicyFormProps) => {
           body: JSON.stringify(submitValues),
         });
 
-        const data = await response.json();
-
-        if (response.ok && data.success) {
+        handleServerResponse(response, () => {
           toast.success(
             values.isActive
               ? "Policy saved successfully."
@@ -98,26 +98,15 @@ export const usePolicyForm = ({ policy }: PolicyFormProps) => {
               description: values.isActive
                 ? "You can finish editing it later."
                 : "New policy has been created.",
-            }
+            },
           );
           form.reset();
           router.push("/admin/policies");
-        } else {
-          toast.error(`Failed to ${isUpdate ? "Update" : "Add"} Policy`, {
-            description: data.error || UNKNOWN_ERROR,
-          });
-        }
-      } catch (error) {
-        console.error("[ERROR]: ", error);
-
-        toast.error(`Failed to ${isUpdate ? "Update" : "Add"} Policy`, {
-          description: UNKNOWN_ERROR,
         });
-      } finally {
-        setIsLoading(false);
-      }
+      }, "Failed to submit policy form.");
+      setIsLoading(false);
     },
-    [policy, router, form, session]
+    [policy, router, form, session],
   );
 
   return {

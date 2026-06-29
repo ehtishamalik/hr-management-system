@@ -1,10 +1,10 @@
-import React from "react";
+import Headline from "@/components/headline";
 import PolicyForm from "@/components/PolicyForm";
-import ToastError from "@/components/toast-error";
+import NotFoundBanner from "@/components/not-found-banner";
 
-import { getPolicyById } from "@/lib/helpers/policies";
+import { getPolicyById } from "@/services/policy";
 
-import type { PolicyTableSelectType } from "@/db/types";
+import type { PolicyTableSelectType } from "@/types";
 
 const AddPolicy = async ({
   searchParams,
@@ -20,9 +20,9 @@ const AddPolicy = async ({
 
     if (!policy) {
       return (
-        <ToastError
-          message="Policy not found."
-          redirectPath="/admin/policies"
+        <NotFoundBanner
+          headline="Policy not found."
+          description="The policy you are looking for does not exist."
         />
       );
     }
@@ -30,17 +30,15 @@ const AddPolicy = async ({
 
   return (
     <>
-      <h1 className="text-2xl font-medium mb-4">
+      <Headline className="mb-2">
         {policy?.id ? "Update" : "Create a new"} Policy
-      </h1>
-      <p className="text-sm text-muted-foreground mb-8">
+      </Headline>
+      <p className="text-sm text-muted-foreground">
         Fill in the details below to{" "}
-        {policy?.id ? "update the" : "create a new"} policy.
+        {policy?.id ? `update “${policy.title}”` : "create a new policy"}.
       </p>
 
-      <section>
-        <PolicyForm policy={policy} />
-      </section>
+      <PolicyForm policy={policy} />
     </>
   );
 };

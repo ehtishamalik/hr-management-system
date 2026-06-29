@@ -1,4 +1,3 @@
-import React from "react";
 import Link from "next/link";
 
 import {
@@ -9,9 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { PolicyTableSelectType, UserTableSelectType } from "@/types";
 import { cn, formatDate } from "@/lib/utils";
-
-import type { PolicyTableSelectType, UserTableSelectType } from "@/db/types";
 
 type PolicyCardProps = {
   policy: PolicyTableSelectType;
@@ -26,7 +24,7 @@ const PolicyCard = ({
 }: PolicyCardProps) => {
   return (
     <Card
-      className={cn("relative isolate transition-transform hover:scale-102", {
+      className={cn("relative isolate transition-transform hover:scale-101", {
         "opacity-75": !isActive,
       })}
     >

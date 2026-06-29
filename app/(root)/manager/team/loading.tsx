@@ -1,14 +1,18 @@
-import React from "react";
+import Headline from "@/components/headline";
 
 import { LoadingTableUI } from "@/components/loading-ui";
 
 const Loading = () => {
   return (
-    <section>
-      <h1 className="text-2xl font-medium mb-8">Team Overview</h1>
+    <>
+      <Headline>Team Overview</Headline>
+      <LoadingTableUI columns={5} rows={3} />
 
-      <LoadingTableUI columns={7} />
-    </section>
+      <Headline type="h3" className="mb-4">
+        Upcoming Leaves
+      </Headline>
+      <LoadingTableUI columns={7} rows={3} />
+    </>
   );
 };
 

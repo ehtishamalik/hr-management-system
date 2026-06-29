@@ -1,66 +1,68 @@
 "use client";
 
+import useSWR from "swr";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { LeaveRemarksHookProps, remarksType, remarkType } from "./types";
 import { UNKNOWN_ERROR } from "@/constants";
 
-import type {
-  LeaveRemarkTableInsertType,
-  UserTableSelectType,
-} from "@/db/types";
+import type { LeaveRemarkTableInsertType, UserTableSelectType } from "@/types";
+import type { LeaveRemarksHookProps, remarkType, remarksType } from "./types";
+import { LEAVE_STATUS } from "@/enum";
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  const data = await response.json();
+  if (!data.success) throw new Error(data.error);
+  return data.data as remarksType;
+};
 
 export const useLeaveRemarks = ({
   leaveId,
+  leaveStatus,
   session,
 }: LeaveRemarksHookProps) => {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [remarks, setRemarks] = useState<remarksType>([]);
-  const [currentRemarks, setCurrentRemarks] = useState<string>("");
-  const [open, setOpen] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [currentRemarks, setCurrentRemarks] = useState<string>("");
 
-  const fetchRemarks = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`/api/leave/remark?leaveId=${leaveId}`, {
-        method: "GET",
-      });
-      const { success, data, error } = await response.json();
-
-      console.log(data);
-
-      if (response.ok && success) {
-        setRemarks(data as remarksType);
-      } else {
-        toast.error("Failed to load remarks", {
-          description: error,
-        });
-        setRemarks([]);
-      }
-    } catch {
-      toast.error("Failed to fetch remarks", {
-        description: "An error occurred while fetching remarks.",
-      });
-      setRemarks([]);
-    } finally {
-      setIsLoading(false);
+  const refreshInterval = useMemo(() => {
+    if (
+      leaveStatus === LEAVE_STATUS.PENDING ||
+      leaveStatus === LEAVE_STATUS.ACCEPTED
+    ) {
+      return 5000;
     }
-  }, [leaveId]);
+    return 0;
+  }, [leaveStatus]);
+
+  const {
+    data: remarks = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(`/api/leave/remark?leaveId=${leaveId}`, fetcher, {
+    refreshInterval: refreshInterval,
+    revalidateOnFocus: true,
+  });
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    if (error) {
+      // toast.error("Failed to load remarks", {
+      //   description: error.message || "Unknown error occurred",
+      // });
+      console.error("Failed to load remarks:", error);
     }
+  }, [error]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: This is intentional
+  useEffect(() => {
+    if (!containerRef.current) return;
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [remarks]);
-
-  useEffect(() => {
-    if (open) fetchRemarks();
-  }, [fetchRemarks, open]);
 
   const onSubmit = async () => {
     if (!session.user.id) return;
+    if (currentRemarks.trim().length === 0) return;
 
     const submitValue: LeaveRemarkTableInsertType = {
       leaveId,
@@ -86,10 +88,12 @@ export const useLeaveRemarks = ({
         : null,
     };
 
-    setRemarks([...remarks, tempRemark as remarkType]);
-    setCurrentRemarks("");
-
     try {
+      // Optimistic update
+      await mutate([...remarks, tempRemark], false);
+
+      setCurrentRemarks("");
+
       const response = await fetch(`/api/leave/remark`, {
         method: "POST",
         headers: {
@@ -98,31 +102,31 @@ export const useLeaveRemarks = ({
         body: JSON.stringify(submitValue),
       });
 
-      const { success, data, error } = await response.json();
+      const responseData = await response.json();
 
-      console.log(data);
-
-      if (response.ok && success) {
-        setRemarks((prev) =>
-          prev.map((r) =>
-            r.leave_remark.id === tempRemark.leave_remark.id ? data : r
-          )
-        );
+      if (response.ok && responseData.success) {
+        // Revalidate to get the real ID from server
+        await mutate();
       } else {
-        toast.error("Failed to add remarks", {
-          description: error || UNKNOWN_ERROR,
-        });
-        setRemarks((prev) =>
-          prev.filter((r) => r.leave_remark.id !== tempRemark.leave_remark.id)
-        );
+        throw new Error(responseData.error.message || "Failed to save remark");
       }
-    } catch {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : UNKNOWN_ERROR;
       toast.error("Failed to add remarks", {
-        description: UNKNOWN_ERROR,
+        description: errorMessage,
       });
-      setRemarks((prev) =>
-        prev.filter((r) => r.leave_remark.id !== tempRemark.leave_remark.id)
-      );
+      // Rollback
+      await mutate();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.ctrlKey && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit();
+    } else if (e.key === "Enter" && (e.ctrlKey || e.shiftKey)) {
+      e.preventDefault();
+      setCurrentRemarks((prev) => `${prev}\n`);
     }
   };
 
@@ -130,11 +134,9 @@ export const useLeaveRemarks = ({
     isLoading,
     remarks,
     currentRemarks,
-    session,
     containerRef,
-    open,
-    setOpen,
     setCurrentRemarks,
     onSubmit,
+    handleKeyDown,
   };
 };

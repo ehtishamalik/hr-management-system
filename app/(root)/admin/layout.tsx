@@ -1,31 +1,18 @@
-import ToastError from "@/components/toast-error";
-import { ROLE } from "@/enum";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { ROLE } from "@/enum";
+import { getSession } from "@/lib/auth/session";
+
+import type { ReactNode } from "react";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session || !session.user?.id) {
-    redirect("/login");
-  }
+  const session = await getSession();
 
   if (session.user.role !== ROLE.ADMIN) {
-    return (
-      <ToastError
-        message="Unauthorized"
-        description="You do not have permission to access this page."
-        redirectPath="/"
-      />
-    );
+    redirect("/");
   }
 
   return <>{children}</>;

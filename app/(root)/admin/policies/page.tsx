@@ -1,55 +1,44 @@
-import React from "react";
 import Link from "next/link";
-import ToastError from "@/components/toast-error";
+import Headline from "@/components/headline";
 import PolicyCard from "@/components/policy-card";
+import NotFoundBanner from "@/components/not-found-banner";
 
-import { Button } from "@/components/ui/button";
 import { PlusCircleIcon } from "lucide-react";
-import { getPolicies } from "@/lib/helpers/policies";
-import { cn } from "@/lib/utils";
+import { getPolicies } from "@/services/policy";
+import { Button } from "@/components/ui/button";
 
 const Policies = async () => {
   const policies = await getPolicies();
 
-  if (!policies) {
+  if (policies.length === 0) {
     return (
-      <ToastError
-        message="Error fetching policies."
-        redirectPath="/admin/policies"
-      />
+      <>
+        <Headline>Policy Management</Headline>
+        <NotFoundBanner
+          headline="No Policies Found"
+          description="You have not added any policies yet. Let's add some!"
+          button={{ label: "Add Policy", href: "/admin/policies/add" }}
+        />
+      </>
     );
   }
 
   return (
     <>
-      <section className="mb-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-medium">Policy Management</h1>
-          <Button size="sm" asChild>
-            <Link href={{ pathname: "/admin/policies/add" }}>
-              <PlusCircleIcon />
-              Add Policy
-            </Link>
-          </Button>
-        </div>
+      <section className="flex justify-between flex-col md:flex-row md:items-center gap-8">
+        <Headline>Policy Management</Headline>
+        <Button size="sm" asChild>
+          <Link href={{ pathname: "/admin/policies/add" }}>
+            <PlusCircleIcon />
+            Add Policy
+          </Link>
+        </Button>
       </section>
 
-      <section className="mb-8">
-        <div
-          className={cn("grid gap-4", {
-            "grid-cols-3": policies.length <= 2,
-            "grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))]":
-              policies.length > 2,
-          })}
-        >
-          {policies.length > 0 ? (
-            policies.map((policy) => (
-              <PolicyCard key={policy.policy.id} {...policy} isAdmin />
-            ))
-          ) : (
-            <p>No policies found.</p>
-          )}
-        </div>
+      <section className="grid-flexible">
+        {policies.map((policy) => (
+          <PolicyCard key={policy.policy.id} {...policy} isAdmin />
+        ))}
       </section>
     </>
   );

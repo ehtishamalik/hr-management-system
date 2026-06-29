@@ -1,142 +1,95 @@
-import { db } from "@/db/drizzle";
-import { UserTable, LeaveRemarkTable } from "@/db/schema";
-import { handleError } from "@/lib/error";
-import { getValueFromRequest } from "@/lib/utils";
 import { asc, eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/withAuth";
+import { withAuth } from "@/lib/auth/with-auth";
+import { getValueFromRequest } from "@/lib/utils";
+import { db } from "@/db/drizzle";
+import { LeaveRemarkTable, LeaveTable, user as UserTable } from "@/db/schema";
+import { AppError, ForbiddenError } from "@/lib/errors";
+import { ROLE } from "@/enum";
 
-import type { CustomResponse } from "@/types";
+import { type NextRequest, NextResponse } from "next/server";
+import type { ApiResponse } from "@/types";
+import type { LeaveRemarkTableSelectType, UserTableSelectType } from "@/types";
 
-// GET Leave Remark(s)
-export const GET = withAuth(async (request: NextRequest) => {
-  const id = getValueFromRequest(request, "id");
+// GET /api/leave/remark?leaveId=<id>
+// Non-ADMIN must provide leaveId and it must belong to them
+export const GET = withAuth(async (request: NextRequest, _ctx, _session) => {
   const leaveId = getValueFromRequest(request, "leaveId");
+  const isAdmin = _session.user.role === ROLE.ADMIN;
 
-  try {
-    if (leaveId) {
-      const data = await db
-        .select()
-        .from(LeaveRemarkTable)
-        .leftJoin(UserTable, eq(UserTable.id, LeaveRemarkTable.userId))
-        .where(eq(LeaveRemarkTable.leaveId, leaveId))
-        .orderBy(asc(LeaveRemarkTable.createdAt));
-
-      return NextResponse.json<CustomResponse>(
-        { success: true, data },
-        { status: 200 }
-      );
-    }
-
-    if (id) {
-      const data = await db
-        .select()
-        .from(LeaveRemarkTable)
-        .leftJoin(UserTable, eq(UserTable.id, LeaveRemarkTable.userId))
-        .where(eq(LeaveRemarkTable.id, id));
-
-      if (!data) {
-        return NextResponse.json<CustomResponse>(
-          { success: false, error: "Leave remark not found." },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json<CustomResponse>({
-        success: true,
-        data: data,
+  if (!leaveId) {
+    if (!isAdmin) {
+      throw new AppError("leaveId is required", {
+        detail: "Please provide a leaveId query parameter.",
+        status: 400,
       });
     }
 
+    // ADMIN can get all remarks without a filter
     const data = await db.select().from(LeaveRemarkTable);
-    return NextResponse.json<CustomResponse>({ success: true, data });
-  } catch (error) {
-    const errorMessage = handleError("Leave Remark GET error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
-
-// POST Leave Remark
-export const POST = withAuth(async (request: NextRequest) => {
-  try {
-    const body = await request.json();
-
-    const [inserted] = await db
-      .insert(LeaveRemarkTable)
-      .values(body)
-      .returning({ id: LeaveRemarkTable.id }); // Only need id for re-fetch
-
-    // Step 2: Fetch joined remark + user
-    const [data] = await db
-      .select()
-      .from(LeaveRemarkTable)
-      .leftJoin(UserTable, eq(UserTable.id, LeaveRemarkTable.userId))
-      .where(eq(LeaveRemarkTable.id, inserted.id));
-
-    return NextResponse.json<CustomResponse>(
-      { success: true, data },
-      { status: 201 }
-    );
-  } catch (error) {
-    const errorMessage = handleError("Leave Remark POST error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
-
-// PUT Leave Remark
-export const PUT = withAuth(async (request: NextRequest) => {
-  const id = getValueFromRequest(request, "id");
-
-  if (!id) {
-    return NextResponse.json<CustomResponse>(
-      { success: false, error: "Missing 'id' in query parameters." },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const body = await request.json();
-    const updatedData = { ...body, updatedAt: new Date() };
-
-    const [result] = await db
-      .update(LeaveRemarkTable)
-      .set(updatedData)
-      .where(eq(LeaveRemarkTable.id, id))
-      .returning();
-
-    return NextResponse.json<CustomResponse>({
+    return NextResponse.json<ApiResponse<LeaveRemarkTableSelectType[]>>({
       success: true,
-      data: result,
+      data,
     });
-  } catch (error) {
-    const errorMessage = handleError("Leave Remark PUT error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
-  }
-});
-
-// DELETE Leave Remark
-export const DELETE = withAuth(async (request: NextRequest) => {
-  const id = getValueFromRequest(request, "id");
-
-  if (!id) {
-    return NextResponse.json<CustomResponse>(
-      { success: false, error: "Missing 'id' in query parameters." },
-      { status: 400 }
-    );
   }
 
-  try {
-    const [result] = await db
-      .delete(LeaveRemarkTable)
-      .where(eq(LeaveRemarkTable.id, id))
-      .returning();
+  // For non-ADMIN: verify the leave belongs to them
+  if (!isAdmin) {
+    const [leave] = await db
+      .select({ userId: LeaveTable.userId })
+      .from(LeaveTable)
+      .where(eq(LeaveTable.id, leaveId))
+      .limit(1);
 
-    return NextResponse.json<CustomResponse>({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    const errorMessage = handleError("Leave Remark DELETE error:", error);
-    return NextResponse.json<CustomResponse>(errorMessage, { status: 500 });
+    if (!leave) {
+      throw new AppError("Leave not found.", {
+        detail: "No leave found with the given ID.",
+        status: 404,
+      });
+    }
+
+    if (leave.userId !== _session.user.id) {
+      throw new ForbiddenError(
+        "You can only view remarks for your own leaves.",
+      );
+    }
   }
-});
+
+  const data = await db
+    .select()
+    .from(LeaveRemarkTable)
+    .leftJoin(UserTable, eq(UserTable.id, LeaveRemarkTable.userId))
+    .where(eq(LeaveRemarkTable.leaveId, leaveId))
+    .orderBy(asc(LeaveRemarkTable.createdAt));
+
+  return NextResponse.json<
+    ApiResponse<
+      {
+        leave_remark: LeaveRemarkTableSelectType;
+        user: UserTableSelectType | null;
+      }[]
+    >
+  >({ success: true, data });
+}, "Error at /api/leave/remark (GET)");
+
+// POST /api/leave/remark — any authenticated user (userId pinned to session)
+export const POST = withAuth(async (request: NextRequest, _ctx, session) => {
+  const body = await request.json();
+
+  const [inserted] = await db
+    .insert(LeaveRemarkTable)
+    .values({ leaveId: body.leaveId, remark: body.remark, userId: session.user.id })
+    .returning({ id: LeaveRemarkTable.id });
+
+  const [data] = await db
+    .select()
+    .from(LeaveRemarkTable)
+    .leftJoin(UserTable, eq(UserTable.id, LeaveRemarkTable.userId))
+    .where(eq(LeaveRemarkTable.id, inserted.id));
+
+  return NextResponse.json<
+    ApiResponse<{
+      leave_remark: LeaveRemarkTableSelectType;
+      user: UserTableSelectType | null;
+    }>
+  >({ success: true, data }, { status: 201 });
+}, "Error at /api/leave/remark (POST)");

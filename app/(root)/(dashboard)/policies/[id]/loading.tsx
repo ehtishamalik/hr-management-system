@@ -1,17 +1,12 @@
-import React from "react";
-
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Loading = () => {
   return (
-    <section className="mb-8 space-y-4">
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-      <Skeleton className="h-8 w-full" />
-    </section>
+    <>
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-4 w-80 mb-8" />
+      <Skeleton className="h-64 w-full" />
+    </>
   );
 };
 

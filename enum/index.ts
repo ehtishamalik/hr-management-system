@@ -10,6 +10,7 @@ export enum LEAVE_STATUS {
   REJECTED = "REJECTED",
   SUSPENDED = "SUSPENDED",
   APPROVED = "APPROVED",
+  LATE = "LATE",
 }
 
 export enum STATUS {
@@ -20,4 +21,14 @@ export enum STATUS {
 export enum LEAVE_TYPE {
   PAID = "PAID",
   UNPAID = "UNPAID",
+}
+
+export enum PF_CONTRIBUTION_TYPE {
+  fixed = "fixed",
+  match_employee = "match_employee",
+}
+
+export enum PF_TRANSACTION_TYPE {
+  monthly_contribution = "monthly_contribution",
+  withdrawal = "withdrawal",
 }
