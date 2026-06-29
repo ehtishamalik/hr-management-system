@@ -1,17 +1,12 @@
 import * as schema from "@/db/schema";
 
-import { betterAuth } from "better-auth";
-import { magicLink } from "better-auth/plugins";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { IS_PRODUCTION, ORIGIN_URL } from "@/constants";
 import { db } from "@/db/drizzle";
+import { ORIGIN_URL } from "@/constants";
+import { betterAuth } from "better-auth";
 import { UserDetailTable } from "@/db/schema";
-
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const HAS_GOOGLE_CREDS = !!(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
+import { customSession } from "better-auth/plugins";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 export const auth = betterAuth({
   baseURL: ORIGIN_URL,
@@ -21,14 +16,8 @@ export const auth = betterAuth({
     schema,
   }),
 
-  socialProviders: {
-    ...(HAS_GOOGLE_CREDS && {
-      google: {
-        prompt: "select_account",
-        clientId: GOOGLE_CLIENT_ID,
-        clientSecret: GOOGLE_CLIENT_SECRET,
-      },
-    }),
+  emailAndPassword: {
+    enabled: true,
   },
 
   plugins: [
@@ -48,15 +37,6 @@ export const auth = betterAuth({
         session,
       };
     }),
-    ...(!IS_PRODUCTION
-      ? [
-          magicLink({
-            sendMagicLink: async ({ email, token, url }) => {
-              console.log(email, token, url);
-            },
-          }),
-        ]
-      : []),
   ],
   session: {
     cookieCache: {
