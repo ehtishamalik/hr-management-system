@@ -1,4 +1,4 @@
-export const EMAIL_POSTFIX = "@lycusinc.com";
+export const EMAIL_POSTFIX = "@example.com";
 export const UNKNOWN_ERROR = "An unknown error occurred.";
 export const NOT_ASSIGNED = "Not Assigned";
 

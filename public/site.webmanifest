@@ -1,9 +1,9 @@
 {
-  "id": "/",
-  "name": "Lycus Human Resource Management System",
-  "short_name": "lycusync",
+  "id": "HR Management System",
+  "name": "Human Resource Management System",
+  "short_name": "hr-management-system",
   "start_url": "/",
-  "description": "Lycus HRM is a comprehensive human resource management system designed to streamline HR processes, enhance employee engagement, and improve organizational efficiency. With features such as employee management, attendance tracking, performance evaluation, and payroll processing, Lycus HRM provides a centralized platform for managing all aspects of human resources. The system is user-friendly and customizable, allowing organizations to tailor it to their specific needs. Whether you're a small business or a large enterprise, Lycus HRM can help you optimize your HR operations and foster a productive work environment.",
+  "description": "HRM is a comprehensive human resource management system designed to streamline HR processes, enhance employee engagement, and improve organizational efficiency. With features such as employee management, attendance tracking, performance evaluation, and payroll processing, HRM provides a centralized platform for managing all aspects of human resources. The system is user-friendly and customizable, allowing organizations to tailor it to their specific needs. Whether you're a small business or a large enterprise, HRM can help you optimize your HR operations and foster a productive work environment.",
   "lang": "en-US",
   "icons": [
     {

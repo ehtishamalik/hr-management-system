@@ -1,6 +1,6 @@
-# Lycus Portal - HR Management System
+# HR Management System
 
-**Lycus Portal** is a comprehensive Human Resources Management System built for Lycus Inc., designed to streamline employee management, leave administration, attendance tracking, provident fund management, medical benefits, and policy management. The application features role-based access control, real-time dashboards, and automated workflows.
+**HR Management System** is a comprehensive Human Resources Management System built for a software company in Pakistan, designed to streamline employee management, leave administration, attendance tracking, provident fund management, medical benefits, and policy management. The application features role-based access control, real-time dashboards, and automated workflows.
 
 ## Features
 
@@ -130,7 +130,7 @@ NEXT_PUBLIC_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd lycusportal
+   cd hr-management-system
    ```
 
 2. **Install dependencies**
@@ -167,7 +167,7 @@ bun run start
 ## Project Structure
 
 ```
-lycusportal/
+hr-management-system/
 ├── app/                          # Next.js App Router pages & layouts
 │   ├── (auth)/                   # Authentication routes (login, onboarding)
 │   ├── (account)/                # User account & profile routes

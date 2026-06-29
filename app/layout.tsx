@@ -17,11 +17,10 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Lycus Inc | Portal",
-  description: "Lycus Inc. Human Resources Management System",
-  authors: [{ name: "Lycus Inc." }],
+  title: "HR Management System",
+  description: "Human Resources Management System",
+  authors: [{ name: "ehtishamalik" }],
   keywords: [
-    "Lycus",
     "HRM",
     "Human Resources Management",
     "Employee Management",
@@ -35,7 +34,7 @@ export const metadata: Metadata = {
     follow: false,
   },
   appleWebApp: {
-    title: "Lycus Sync",
+    title: "HR Management System",
     statusBarStyle: "default",
   },
 };
