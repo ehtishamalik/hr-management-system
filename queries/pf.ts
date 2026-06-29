@@ -137,7 +137,10 @@ export const getAlreadyProcessedUserIdsQuery = async (
       and(
         eq(PFLedgerTable.month, month),
         eq(PFLedgerTable.year, year),
-        eq(PFLedgerTable.transactionType, PF_TRANSACTION_TYPE.monthly_contribution),
+        eq(
+          PFLedgerTable.transactionType,
+          PF_TRANSACTION_TYPE.monthly_contribution,
+        ),
       ),
     );
   return new Set(rows.map((r) => r.userId));

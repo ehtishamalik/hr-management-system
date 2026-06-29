@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1770793080314,
-      "tag": "0000_cuddly_magma",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1770879945129,
-      "tag": "0001_handy_bloodaxe",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1773738900494,
-      "tag": "0002_tiny_lockheed",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1779091848981,
-      "tag": "0003_fancy_sauron",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1779444364194,
-      "tag": "0004_luxuriant_marvel_zombies",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1782652909138,
-      "tag": "0005_mushy_sphinx",
+      "when": 1782719862040,
+      "tag": "0000_flowery_skaar",
       "breakpoints": true
     }
   ]

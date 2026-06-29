@@ -77,7 +77,11 @@ export const POST = withAuth(async (request: NextRequest, _ctx, session) => {
 
   const [inserted] = await db
     .insert(LeaveRemarkTable)
-    .values({ leaveId: body.leaveId, remark: body.remark, userId: session.user.id })
+    .values({
+      leaveId: body.leaveId,
+      remark: body.remark,
+      userId: session.user.id,
+    })
     .returning({ id: LeaveRemarkTable.id });
 
   const [data] = await db

@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3001",
+    "dev": "next dev --turbopack",
     "prebuild": "bun run migrate",
     "build": "next build",
-    "start": "next start --port 3001",
+    "start": "next start",
     "reinstall": "rm -rf node_modules && rm bun.lock && bun install",
     "lint": "biome lint --write --css-parse-tailwind-directives=true",
     "format": "biome format --write --css-parse-tailwind-directives=true",

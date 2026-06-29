@@ -23,7 +23,9 @@ export async function updateLeaveStatus({
   newStatus,
   systemRemark,
   extraRemark,
-}: UpdateLeaveStatusOptions): Promise<NextResponse<ApiResponse<LeaveTableSelectType>>> {
+}: UpdateLeaveStatusOptions): Promise<
+  NextResponse<ApiResponse<LeaveTableSelectType>>
+> {
   const id = getValueFromRequest(request, "id");
 
   if (!id) {
