@@ -2,9 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import logo from "@/public/logo.png";
-import logoWhite from "@/public/logo_white.png";
-import logoSmall from "@/public/android-chrome-192x192.png";
+import LOGO from "@/public/android-chrome-192x192.png";
 
 import { usePathname } from "next/navigation";
 import { cn, getRoleStatues } from "@/lib/utils";
@@ -67,30 +65,30 @@ export const AppSidebar = ({ session }: { session: SessionType }) => {
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
         <Image
-          src={logo}
+          src={LOGO}
           alt="company logo"
-          className={cn("dark:hidden", {
+          className={cn("w-full h-16 object-contain dark:hidden", {
             hidden: state === "collapsed",
           })}
           width={192}
           priority
         />
         <Image
-          src={logoWhite}
+          src={LOGO}
           alt="company logo"
-          className={cn("hidden dark:block", {
+          className={cn("w-full h-16 object-contain hidden dark:block", {
             "hidden!": state === "collapsed",
           })}
           width={192}
           priority
         />
         <Image
-          src={logoSmall}
+          src={LOGO}
           alt="company logo"
-          className={cn("pt-2.5", {
+          className={cn("mx-auto pt-2.5", {
             hidden: state === "expanded",
           })}
-          width={48}
+          width={64}
           priority
         />
       </SidebarHeader>
