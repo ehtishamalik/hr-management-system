@@ -88,7 +88,7 @@ function WithdrawalDialog({
       });
       handleServerResponse(response, () => {
         toast.success(
-          `Withdrawal of PKR ${formatCurrency(values.amount)} recorded for ${userName}`,
+          `Withdrawal of USD ${formatCurrency(values.amount)} recorded for ${userName}`,
         );
         setOpen(false);
         form.reset();
@@ -111,7 +111,7 @@ function WithdrawalDialog({
           <DialogDescription>
             Current balance:{" "}
             <span className="font-semibold text-foreground">
-              PKR {formatCurrency(currentBalance)}
+              USD {formatCurrency(currentBalance)}
             </span>
             . The withdrawal amount must not exceed the available balance.
           </DialogDescription>
@@ -126,7 +126,7 @@ function WithdrawalDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid} className="col-span-2">
                   <FieldLabel htmlFor={field.name} required>
-                    Withdrawal Amount (PKR)
+                    Withdrawal Amount (USD)
                   </FieldLabel>
                   <NumberInput
                     {...field}
@@ -153,7 +153,7 @@ function WithdrawalDialog({
                   Remaining after withdrawal
                 </span>
                 <span className="font-semibold">
-                  PKR {formatCurrency(remaining < 0 ? 0 : remaining)}
+                  USD {formatCurrency(remaining < 0 ? 0 : remaining)}
                   {remaining < 0 && " (insufficient balance)"}
                 </span>
               </div>

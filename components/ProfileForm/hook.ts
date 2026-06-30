@@ -39,7 +39,7 @@ export function useProfileForm({
       phone: "",
       address: "",
 
-      currency: "PKR",
+      currency: "USD",
       salary: "",
       taxAmount: "",
     },

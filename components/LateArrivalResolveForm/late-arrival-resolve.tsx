@@ -54,7 +54,7 @@ const LateArrivalResolveForm = ({
     <section className="space-y-4">
       <div className="flex justify-between items-center bg-muted/50 p-4 rounded-xl border">
         <div>
-          <Headline className="h3">Resolve Late Arrivals</Headline>
+          <Headline type="h3">Resolve Late Arrivals</Headline>
           <p className="text-sm text-muted-foreground">
             Select 3 late arrivals from the same month to resolve.
           </p>

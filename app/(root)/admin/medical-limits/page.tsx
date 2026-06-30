@@ -38,7 +38,7 @@ const ManageMedicalLimits = async () => {
             <TableRow>
               <TableHead>#</TableHead>
               <TableHead>Year</TableHead>
-              <TableHead>Amount (PKR)</TableHead>
+              <TableHead>Amount (USD)</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Last Updated</TableHead>
               <TableHead className="text-right">Action</TableHead>
@@ -49,7 +49,7 @@ const ManageMedicalLimits = async () => {
               <TableRow key={id}>
                 <TableCell className="font-bold">{index + 1}</TableCell>
                 <TableCell className="font-bold">{year}</TableCell>
-                <TableCell>PKR {formatCurrency(amount)}</TableCell>
+                <TableCell>USD {formatCurrency(amount)}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {formatDate(createdAt)}
                 </TableCell>

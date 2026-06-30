@@ -18,7 +18,7 @@ function EnrolledRow({
   const companyLabel = s.companyContributionEnabled
     ? s.companyContributionType === "match_employee"
       ? "Match Employee"
-      : `PKR ${formatCurrency(s.companyContributionAmount ?? "0")}`
+      : `USD ${formatCurrency(s.companyContributionAmount ?? "0")}`
     : "Disabled";
 
   return (
@@ -31,7 +31,7 @@ function EnrolledRow({
         {row.userDetail?.employeeId ?? "—"}
       </TableCell>
       <TableCell>
-        {`PKR ${formatCurrency(s.employeeMonthlyAmount ?? "0")}`}
+        {`USD ${formatCurrency(s.employeeMonthlyAmount ?? "0")}`}
       </TableCell>
       <TableCell className="text-sm">{companyLabel}</TableCell>
       <TableCell className="text-sm text-muted-foreground">

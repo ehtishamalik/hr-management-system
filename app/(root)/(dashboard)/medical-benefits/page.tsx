@@ -70,7 +70,7 @@ const MedicalExpensesUserPage = async ({ searchParams }: PageProps) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              PKR {formatCurrency(medicalLimit.amount)}
+              USD {formatCurrency(medicalLimit.amount)}
             </p>
           </CardContent>
         </Card>
@@ -82,7 +82,7 @@ const MedicalExpensesUserPage = async ({ searchParams }: PageProps) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-destructive">
-              PKR {formatCurrency(dashboardData.totalUsed)}
+              USD {formatCurrency(dashboardData.totalUsed)}
             </p>
           </CardContent>
         </Card>
@@ -94,7 +94,7 @@ const MedicalExpensesUserPage = async ({ searchParams }: PageProps) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-emerald-600">
-              PKR{" "}
+              USD{" "}
               {formatCurrency(
                 Number.parseInt(medicalLimit.amount, 10) -
                   dashboardData.totalUsed,
@@ -121,7 +121,7 @@ const MedicalExpensesUserPage = async ({ searchParams }: PageProps) => {
                   {MONTH_NAMES[m.month - 1]}
                 </TableCell>
                 <TableCell className="text-right">
-                  PKR {formatCurrency(m.amount)}
+                  USD {formatCurrency(m.amount)}
                 </TableCell>
               </TableRow>
             ))}

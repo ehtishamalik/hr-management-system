@@ -139,17 +139,17 @@ const PFDashboardPage = async ({ searchParams }: PageProps) => {
                     </TableCell>
                     <TableCell>
                       {parseFloat(entry.employeeContribution) > 0
-                        ? `PKR ${formatCurrency(entry.employeeContribution)}`
+                        ? `USD ${formatCurrency(entry.employeeContribution)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-emerald-600">
                       {parseFloat(entry.companyContribution) > 0
-                        ? `PKR ${formatCurrency(entry.companyContribution)}`
+                        ? `USD ${formatCurrency(entry.companyContribution)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-red-600">
                       {parseFloat(entry.withdrawalAmount) > 0
-                        ? `PKR ${formatCurrency(entry.withdrawalAmount)}`
+                        ? `USD ${formatCurrency(entry.withdrawalAmount)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

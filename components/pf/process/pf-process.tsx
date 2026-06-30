@@ -225,12 +225,12 @@ function PFProcess({ month: initMonth, year: initYear }: PFProcessProps) {
           <SummaryCard
             icon={<TrendingUp className="size-4 text-blue-600" />}
             label="Employee Total"
-            value={`PKR ${formatCurrency(result.totalEmployeeContribution)}`}
+            value={`USD ${formatCurrency(result.totalEmployeeContribution)}`}
           />
           <SummaryCard
             icon={<Building2 className="size-4 text-emerald-600" />}
             label="Company Total"
-            value={`PKR ${formatCurrency(result.totalCompanyContribution)}`}
+            value={`USD ${formatCurrency(result.totalCompanyContribution)}`}
           />
         </div>
       )}
@@ -247,7 +247,7 @@ function PFProcess({ month: initMonth, year: initYear }: PFProcessProps) {
                 <span>
                   Employee Total:{" "}
                   <strong className="text-foreground">
-                    PKR{" "}
+                    USD{" "}
                     {formatCurrency(
                       history.reduce(
                         (s, r) => s + parseFloat(r.ledger.employeeContribution),
@@ -259,7 +259,7 @@ function PFProcess({ month: initMonth, year: initYear }: PFProcessProps) {
                 <span>
                   Company Total:{" "}
                   <strong className="text-foreground">
-                    PKR{" "}
+                    USD{" "}
                     {formatCurrency(
                       history.reduce(
                         (s, r) => s + parseFloat(r.ledger.companyContribution),
@@ -303,13 +303,13 @@ function PFProcess({ month: initMonth, year: initYear }: PFProcessProps) {
                       {row.userDetail?.employeeId ?? "—"}
                     </TableCell>
                     <TableCell>
-                      PKR {formatCurrency(row.ledger.employeeContribution)}
+                      USD {formatCurrency(row.ledger.employeeContribution)}
                     </TableCell>
                     <TableCell>
-                      PKR {formatCurrency(row.ledger.companyContribution)}
+                      USD {formatCurrency(row.ledger.companyContribution)}
                     </TableCell>
                     <TableCell className="font-semibold">
-                      PKR {formatCurrency(row.ledger.totalContribution)}
+                      USD {formatCurrency(row.ledger.totalContribution)}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {row.ledger.referenceId ?? "—"}

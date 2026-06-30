@@ -31,7 +31,7 @@ function BalanceCard({
             "text-emerald-600": positive,
           })}
         >
-          PKR {formatCurrency(value)}
+          USD {formatCurrency(value)}
         </p>
       </CardContent>
     </Card>

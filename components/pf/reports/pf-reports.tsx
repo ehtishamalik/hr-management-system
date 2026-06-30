@@ -318,22 +318,22 @@ function PFReports({
                     </TableCell>
                     <TableCell>
                       {parseFloat(entry.employeeContribution) > 0
-                        ? `PKR ${formatCurrency(entry.employeeContribution)}`
+                        ? `USD ${formatCurrency(entry.employeeContribution)}`
                         : "—"}
                     </TableCell>
                     <TableCell>
                       {parseFloat(entry.companyContribution) > 0
-                        ? `PKR ${formatCurrency(entry.companyContribution)}`
+                        ? `USD ${formatCurrency(entry.companyContribution)}`
                         : "—"}
                     </TableCell>
                     <TableCell>
                       {parseFloat(entry.totalContribution) > 0
-                        ? `PKR ${formatCurrency(entry.totalContribution)}`
+                        ? `USD ${formatCurrency(entry.totalContribution)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-destructive">
                       {parseFloat(entry.withdrawalAmount) > 0
-                        ? `PKR ${formatCurrency(entry.withdrawalAmount)}`
+                        ? `USD ${formatCurrency(entry.withdrawalAmount)}`
                         : "—"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground max-w-40 truncate">

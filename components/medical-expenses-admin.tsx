@@ -96,13 +96,13 @@ export function MedicalExpensesAdmin({
                   <TableCell className="text-xs text-muted-foreground">
                     {u.email}
                   </TableCell>
-                  <TableCell>PKR {formatCurrency(u.totalUsed)}</TableCell>
+                  <TableCell>USD {formatCurrency(u.totalUsed)}</TableCell>
                   <TableCell
                     className={
                       remaining <= 0 ? "text-red-600" : "text-green-600"
                     }
                   >
-                    PKR {formatCurrency(remaining)}
+                    USD {formatCurrency(remaining)}
                   </TableCell>
                   <TableCell className="text-right">
                     <ExpenseDrawer
@@ -221,7 +221,7 @@ function ExpenseDrawer({
               Yearly Limit
             </p>
             <p className="text-lg font-bold">
-              PKR {yearlyLimit.toLocaleString()}
+              USD {yearlyLimit.toLocaleString()}
             </p>
           </div>
           <div>
@@ -231,7 +231,7 @@ function ExpenseDrawer({
             <p
               className={`text-lg font-bold ${remaining < 0 ? "text-red-600" : "text-green-600"}`}
             >
-              PKR {remaining.toLocaleString()}
+              USD {remaining.toLocaleString()}
             </p>
           </div>
         </div>

@@ -79,16 +79,16 @@ function PFSummaryTable({ rows }: PFSummaryTableProps) {
                       </p>
                     )}
                   </TableCell>
-                  <TableCell>PKR {formatCurrency(row.employeeTotal)}</TableCell>
-                  <TableCell>PKR {formatCurrency(row.companyTotal)}</TableCell>
-                  <TableCell>PKR {formatCurrency(total)}</TableCell>
+                  <TableCell>USD {formatCurrency(row.employeeTotal)}</TableCell>
+                  <TableCell>USD {formatCurrency(row.companyTotal)}</TableCell>
+                  <TableCell>USD {formatCurrency(total)}</TableCell>
                   <TableCell className="text-destructive">
                     {row.withdrawalTotal > 0
-                      ? `PKR ${formatCurrency(row.withdrawalTotal)}`
+                      ? `USD ${formatCurrency(row.withdrawalTotal)}`
                       : "—"}
                   </TableCell>
                   <TableCell className="font-semibold text-emerald-600">
-                    PKR {formatCurrency(row.balance)}
+                    USD {formatCurrency(row.balance)}
                   </TableCell>
                 </TableRow>
               );
