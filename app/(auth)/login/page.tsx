@@ -34,6 +34,8 @@ const Login = async () => {
             </CardTitle>
             <CardDescription>
               Sign in to continue to your dashboard
+              <br />
+              <em>An admin account is prefilled for your convenience</em>
             </CardDescription>
           </CardHeader>
           <CardContent>

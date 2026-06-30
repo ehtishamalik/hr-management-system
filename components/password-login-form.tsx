@@ -13,8 +13,8 @@ import { type SubmitEventHandler, useState } from "react";
 export const PasswordLoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("michael.anderson@example.com");
+  const [password, setPassword] = useState("Password123");
 
   const onSignIn: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
