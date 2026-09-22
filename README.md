@@ -532,6 +532,3 @@ For internal development:
 - [shadcn/ui Components](https://ui.shadcn.com/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 
-## License
-
-This project is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
